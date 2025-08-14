@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  mesh:
+    build: .
+    volumes:
+      - ./:/app:z
+    command: sh -c "air"
+    ports:
+      - "8000:8000"
+    environment:
+      - GOFLAGS=-buildvcs=false
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/app:z
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mesh

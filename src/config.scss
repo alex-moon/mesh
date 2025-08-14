@@ -1,0 +1,14 @@
+@use 'fonts' as *;
+
+$color-text-primary: #334;
+$color-heading: #222;
+$shadow-large: 0 10px 20px rgba(0, 0, 0, 0.1);
+
+@mixin respond-to($media) {
+  @if $media == desktop {
+    @media (min-width: 901px) { @content; }
+  }
+  @else if $media == mobile {
+    @media (max-width: 900px) { @content; }
+  }
+}
