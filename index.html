@@ -12,57 +12,35 @@
     <meta property="og:description" content="Server-first components that feel like SPAs">
     <meta property="og:type" content="website">
 
-    <!-- Favicon placeholder -->
     <link rel="icon" href="/static/favicon.ico">
-
-    <!-- CSS will be injected here by Go -->
-    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/{{.Css}}">
 </head>
 <body>
-<header class="header">
-    <div class="container">
-        <h1 class="mb-0">MESH</h1>
-        <p class="mb-0" style="color: #667eea; font-weight: 500;">Modular Element SSR with Hydration</p>
-    </div>
-</header>
-
-<main class="main-content">
-    <div class="container">
-        <div class="text-center mb-4">
-            <h2>Server-first components that feel like SPAs</h2>
-            <p style="font-size: 1.1rem; color: #4a5568; max-width: 600px; margin: 0 auto;">
-                Write components in HTML, CSS, TypeScript, and Go. MESH handles the complexity of server-client coordination automatically.
-            </p>
-        </div>
-
-        <div class="card">
-            <h3>Kanban Demo</h3>
-            <p>Real-time collaborative Kanban board built with MESH components. Multiple users can add, edit, and drag cards simultaneously.</p>
-
-            <!-- Kanban board component will be injected here -->
-            <div id="kanban-container">
-                <kanban-board></kanban-board>
+<div class="container">
+    <header>
+        <div class="header">
+            <div class="logo">
+                <img src="/static/logo.png" alt="MESH Icon" />
+            </div>
+            <div class="text">
+                <h1>MESH</h1>
+                <p class="subtitle">Modular Element SSR with Hydration</p>
             </div>
         </div>
+    </header>
 
-        <div class="text-center mt-4">
-            <a href="#" class="btn btn-primary">View Source Code</a>
-            <a href="#" class="btn btn-secondary">Documentation</a>
-        </div>
-    </div>
-</main>
+    <main class="content">
+        {{ .App }}
+    </main>
 
-<footer style="background: rgba(255, 255, 255, 0.95); padding: 2rem 0; margin-top: 4rem; border-top: 1px solid rgba(0, 0, 0, 0.1);">
-    <div class="container text-center">
-        <p style="color: #718096; margin: 0;">
-            Built with MESH •
-            <a href="https://github." style="color: #667eea; text-decoration: none;">GitHub</a> •
-            <a href="#" style="color: #667eea; text-decoration: none;">Docs</a>
+    <footer>
+        <p>
+            an <a target="_blank" href="https://ajmoon.com">Alex Moon</a> production
+            • <a target="_blank" href="https://github.com/alex-moon/mesh">fork me on GitHub</a>
         </p>
-    </div>
-</footer>
+    </footer>
+</div>
 
-<!-- JavaScript will be injected here by Go -->
-<script type="module" src="/static/js/main.js"></script>
+<script src="/static/{{.Js}}"></script>
 </body>
 </html>
