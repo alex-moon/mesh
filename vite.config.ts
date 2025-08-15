@@ -12,15 +12,16 @@ export default defineConfig({
                 main: 'src/main.ts',
                 styles: 'src/main.scss',
                 app: 'src/components/app/app.scss',
+                board: 'src/components/board/board.scss',
             },
             output: {
                 entryFileNames: 'js/[name].[hash].js',
                 chunkFileNames: 'js/[name].[hash].js',
                 assetFileNames: (assetInfo) => {
-                    if ((assetInfo as any).name?.endsWith('.css')) {
-                        const name = (assetInfo as any).name;
-                        if (name === 'app.css') {
-                            return 'css/components/[name].[hash][extname]'
+                    const originalFileName = assetInfo.originalFileName || '';
+                    if (originalFileName.match(/.*css/)) {
+                        if (originalFileName.match(/components/)) {
+                            return 'css/components/[name][extname]'
                         }
                         return 'css/[name].[hash][extname]'
                     }

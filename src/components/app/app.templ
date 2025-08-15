@@ -1,13 +1,18 @@
 package app
 
+import (
+    "mesh/src/components/board"
+)
+
 templ App() {
-	<app>
+	<mesh-app>
 		<template shadowrootmode="open">
 			<base href="/"/>
 			<link rel="stylesheet" href="/static/css/components/app.css"/>
 			<div class="app">
-				<board></board>
+			    <p>Here is an example:</p>
+				@board.Board()
 			</div>
 		</template>
-	</app>
+	</mesh-app>
 }

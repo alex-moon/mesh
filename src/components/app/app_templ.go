@@ -8,6 +8,10 @@ package app
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import (
+	"mesh/src/components/board"
+)
+
 func App() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -29,7 +33,15 @@ func App() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<app><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/app.css\"><div class=\"app\"><board></board></div></template></app>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<mesh-app><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/app.css\"><div class=\"app\"><p>Here is an example:</p>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = board.Board().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></template></mesh-app>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
