@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  mesh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - ./:/app:z
+    ports:
+      - "8000:8000"
+    environment:
+      - GOFLAGS=-buildvcs=false
+      - NODE_ENV=development
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/app:z
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mesh

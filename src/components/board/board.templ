@@ -1,0 +1,28 @@
+// components/board/board.templ
+package board
+
+import "strconv"
+
+// BoardProps contains the data needed for the board template
+type BoardProps struct {
+    Count  int
+    IsHTMX bool
+}
+
+// Board renders the board component
+templ Board(props BoardProps) {
+    <mesh-board>
+        <template shadowrootmode="open">
+            <base href="/"/>
+            <link rel="stylesheet" href="/static/css/components/board.css"/>
+            <div class="board">
+                <h2>Counter Demo</h2>
+                <p>Current count: <span id="counter">{ strconv.Itoa(props.Count) }</span></p>
+                <form hx-post="/board">
+                    <input type="hidden" name="action" value="increment"/>
+                    <button type="submit">Increment Counter</button>
+                </form>
+            </div>
+        </template>
+    </mesh-board>
+}

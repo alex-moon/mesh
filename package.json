@@ -1,0 +1,20 @@
+{
+  "name": "mesh",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "lit": "^3.3.1",
+    "sass-embedded": "^1.90.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.2"
+  },
+  "dependencies": {
+    "htmx.org": "^2.0.6"
+  }
+}
