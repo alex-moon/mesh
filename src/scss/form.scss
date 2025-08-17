@@ -1,0 +1,21 @@
+form {
+  background: #ffeec0 !important;
+}
+
+input, textarea {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 8px 0;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.error {
+  color: #d33;
+  background: #ffc0c0;
+  padding: 8px;
+  border-radius: 4px;
+}

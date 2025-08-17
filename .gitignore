@@ -28,5 +28,12 @@ go.work.sum
 .env
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+
+# App stuff
+static/*
+scratch/*
+tmp/*
+node_modules
+

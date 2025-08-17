@@ -1,0 +1,28 @@
+@use "../../scss/hide" as *;
+@use "../../scss/card" as *;
+@use "../../scss/button" as *;
+@use "../../scss/form" as *;
+
+.card-header {
+  margin-bottom: 12px;
+  
+  h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2em;
+  }
+}
+
+.card-content {
+  color: #666;
+  line-height: 1.4;
+}
+
+.actions {
+  margin-top: 16px;
+
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+

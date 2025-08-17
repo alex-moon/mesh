@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" hx-ext="shadow-host-swap">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MESH - Modular Element SSR with Hydration</title>
+
+    <!-- Meta tags for better SEO and social sharing -->
+    <meta name="description" content="Server-first components that feel like SPAs">
+    <meta name="author" content="Alex Moon">
+    <meta property="og:title" content="MESH - Modular Element SSR with Hydration">
+    <meta property="og:description" content="Server-first components that feel like SPAs">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/{{.Css}}">
+    <script src="/static/htmx.js"></script>
+    <script>
+        // htmx.logAll()
+    </script>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="header">
+            <div class="logo">
+                <img src="/static/logo.png" alt="MESH Icon" />
+            </div>
+            <div class="text">
+                <h1>MESH</h1>
+                <p class="subtitle">Modular Element SSR with Hydration</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        {{ .App }}
+    </main>
+
+    <footer>
+        <p>
+            an <a target="_blank" href="https://ajmoon.com">Alex Moon</a> production
+            • <a target="_blank" href="https://github.com/alex-moon/mesh">fork me on GitHub</a>
+        </p>
+    </footer>
+</div>
+
+<script src="/static/{{.Js}}"></script>
+</body>
+</html>

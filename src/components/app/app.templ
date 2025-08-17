@@ -1,0 +1,21 @@
+// components/app/app.templ
+package app
+
+// AppProps contains the data needed for the app template
+type AppProps struct {
+    BoardComponent templ.Component
+    IsHTMX        bool
+}
+
+// App renders the main app component
+templ App(props AppProps) {
+    <mesh-app>
+        <template shadowrootmode="open">
+            <base href="/"/>
+            <link rel="stylesheet" href="/static/css/components/app.css"/>
+            <div class="app">
+                @props.BoardComponent
+            </div>
+        </template>
+    </mesh-app>
+}

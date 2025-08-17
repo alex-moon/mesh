@@ -1,0 +1,103 @@
+package card
+
+import (
+    "mesh/src/services"
+    "fmt"
+)
+
+const PutActionDemote = "demote"
+const PutActionPromote = "promote"
+
+type Data struct {
+    ID int
+    Title string
+    Content string
+    ColumnID int
+}
+type Errors struct {
+    ID string
+    Title string
+    Content string
+    ColumnID string
+}
+
+func (e *Errors) Any() bool {
+	if e == nil {
+		return false
+	}
+	return *e != Errors{}
+}
+
+type CardProps struct {
+	*services.Card
+	Data
+	Errors
+	HasErrors  bool
+	CanDemote  bool
+	CanPromote bool
+	OOB        bool
+}
+
+templ Card(props CardProps) {
+    <mesh-card
+        id={ fmt.Sprintf("card-%d", props.Card.ID) }
+        if ( props.OOB ) {
+            hx-swap-oob="true"
+        }
+    >
+        <template shadowrootmode="open">
+            <base href="/"/>
+            <link rel="stylesheet" href="/static/css/components/card.css"/>
+            <div data-view class={ "card", templ.KV("hide", props.HasErrors) }>
+                <div class="card-header">
+                    <h3>{ props.Card.Title }</h3>
+                </div>
+                <div class="card-content">
+                    { props.Card.Content }
+                </div>
+                <div class="actions">
+                    if props.CanDemote {
+                        <form hx-put="/card">
+                            <input type="hidden" name="action" value="demote" />
+                            <input type="hidden" name="cardID" value={props.Card.ID} />
+                            <button type="submit" aria-label="Move to previous column">
+                                <i data-lucide="arrow-left"></i>
+                            </button>
+                        </form>
+                    }
+                    <button type="button" mesh-click="edit">Edit</button>
+                    if props.CanPromote {
+                        <form hx-put="/card">
+                            <input type="hidden" name="action" value="promote" />
+                            <input type="hidden" name="cardID" value={props.Card.ID} />
+                            <button type="submit" aria-label="Move to next column">
+                                <i data-lucide="arrow-right"></i>
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+            <form data-form class={ "card", templ.KV("hide", !props.HasErrors) } hx-patch="/card">
+                <input type="hidden" name="cardID" value={ props.Card.ID } />
+                <label>
+                    Title
+                    <input type="text" name="title" value={ props.Data.Title } />
+                </label>
+                if props.Errors.Title != "" {
+                    <div class="error">{ props.Errors.Title }</div>
+                }
+                <label>
+                    Content
+                    <textarea name="content">{ props.Data.Content }</textarea>
+                </label>
+                if props.Errors.Content != "" {
+                    <div class="error">{ props.Errors.Content }</div>
+                }
+                <div class="actions">
+                    <button type="button" mesh-click="cancel">Cancel</button>
+                    <button type="submit">Save</button>
+                </div>
+            </form>
+        </template>
+    </mesh-card>
+}

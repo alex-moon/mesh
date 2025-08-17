@@ -1,0 +1,24 @@
+package board
+
+type BoardProps struct {
+	Columns  []templ.Component
+	IsHTMX bool
+}
+
+// Board renders the board component
+templ Board(props BoardProps) {
+    <mesh-board>
+        <template shadowrootmode="open">
+            <base href="/"/>
+            <link rel="stylesheet" href="/static/css/components/board.css"/>
+            <div class="board-header card">
+                <h2>Board</h2>
+            </div>
+            <div class="board">
+                for _, column := range props.Columns {
+                    @column
+                }
+            </div>
+        </template>
+    </mesh-board>
+}

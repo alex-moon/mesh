@@ -1,0 +1,17 @@
+@use "../../scss/card" as *;
+
+.board-header {
+  width: 100%;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5em;
+  }
+}
+
+.board {
+  display: flex;
+  gap: 16px;
+}
