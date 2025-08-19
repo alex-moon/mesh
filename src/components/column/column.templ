@@ -1,0 +1,28 @@
+package column
+
+// ColumnProps contains the data needed for the column template
+type ColumnProps struct {
+    Title string
+    Cards []templ.Component
+    IsHTMX bool
+}
+
+// Column renders the column component
+templ Column(props ColumnProps) {
+    <mesh-column>
+        <template shadowrootmode="open">
+            <base href="/"/>
+            <link rel="stylesheet" href="/static/css/components/column.css"/>
+            <div class="column">
+                <div class="column-header">
+                    <h3>{ props.Title }</h3>
+                </div>
+                <div class="cards">
+                    for _, card := range props.Cards {
+                        @card
+                    }
+                </div>
+            </div>
+        </template>
+    </mesh-column>
+}

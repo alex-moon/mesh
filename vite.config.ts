@@ -13,6 +13,8 @@ export default defineConfig({
                 styles: 'src/main.scss',
                 app: 'src/components/app/app.scss',
                 board: 'src/components/board/board.scss',
+                column: 'src/components/column/column.scss',
+                card: 'src/components/card/card.scss',
             },
             output: {
                 entryFileNames: 'js/[name].[hash].js',

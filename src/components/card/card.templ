@@ -1,0 +1,26 @@
+package card
+
+// CardProps contains the data needed for the card template
+type CardProps struct {
+    Title  string
+    Content string
+    IsHTMX bool
+}
+
+// Card renders the card component
+templ Card(props CardProps) {
+    <mesh-card>
+        <template shadowrootmode="open">
+            <base href="/"/>
+            <link rel="stylesheet" href="/static/css/components/card.css"/>
+            <div class="card">
+                <div class="card-header">
+                    <h3>{ props.Title }</h3>
+                </div>
+                <div class="card-content">
+                    { props.Content }
+                </div>
+            </div>
+        </template>
+    </mesh-card>
+}
