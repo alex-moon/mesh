@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 )
 
@@ -9,7 +10,7 @@ type Card struct {
 	ID       int
 	Title    string
 	Content  string
-	ColumnID int // Track which column this card belongs to
+	ColumnID int
 }
 
 type Column struct {
@@ -28,9 +29,11 @@ type CardService struct {
 
 	nextCardID   int
 	nextColumnID int
+
+	log *slog.Logger
 }
 
-func NewCardService() *CardService {
+func NewCardService(log *slog.Logger) *CardService {
 	service := &CardService{
 		mu:           sync.RWMutex{},
 		cards:        make(map[int]*Card),
@@ -38,6 +41,7 @@ func NewCardService() *CardService {
 		columnCards:  make(map[int][]int),
 		nextCardID:   4, // Starting after our seed data
 		nextColumnID: 4,
+		log:          log,
 	}
 
 	// Seed data
@@ -53,7 +57,7 @@ func (c *CardService) seedData() {
 
 	// Create cards
 	c.cards[1] = &Card{ID: 1, Title: "Blog post", Content: "Once the app is working and looking good, write it up", ColumnID: 1}
-	c.cards[2] = &Card{ID: 2, Title: "Post to HN", Content: "As per title", ColumnID: 1}
+	c.cards[2] = &Card{ID: 2, Title: "Post to HN", Content: "", ColumnID: 1}
 	c.cards[3] = &Card{ID: 3, Title: "Build app", Content: "Implement minimal Kanban Board with columns and draggable/editable cards", ColumnID: 2}
 
 	// Set up column ordering
@@ -62,20 +66,42 @@ func (c *CardService) seedData() {
 	c.columnCards[3] = []int{}
 }
 
-func (c *CardService) GetColumn(id int) ColumnWithCards {
+func (c *CardService) CanPromote(cardID int) bool {
+	for _, column := range c.columns {
+		for _, id := range c.columnCards[column.ID] {
+			if id == cardID {
+				return column.Order < len(c.columns)
+			}
+		}
+	}
+	return false
+}
+
+func (c *CardService) CanDemote(cardID int) bool {
+	for _, column := range c.columns {
+		for _, id := range c.columnCards[column.ID] {
+			if id == cardID {
+				return column.Order > 0
+			}
+		}
+	}
+	return false
+}
+
+func (c *CardService) GetColumn(id int) (*ColumnWithCards, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	var result ColumnWithCards
-	var column = c.columns[id]
-	if column != nil {
-		cards := c.getCardsForColumn(id)
-		result = ColumnWithCards{
-			Column: *column,
-			Cards:  cards,
-		}
+	column, exists := c.columns[id]
+	if !exists {
+		return nil, fmt.Errorf("column with id %d not found", id)
 	}
-	return result
+
+	cards := c.getCardsForColumn(id)
+	return &ColumnWithCards{
+		Column: *column,
+		Cards:  cards,
+	}, nil
 }
 
 // GetColumns returns columns with their cards in order

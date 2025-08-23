@@ -1,7 +1,6 @@
 package board
 
 import (
-	"context"
 	"log/slog"
 	"mesh/src/components/base"
 	"mesh/src/components/column"
@@ -21,7 +20,7 @@ type Handler struct {
 // New creates a new board handler with dependencies
 func New(log *slog.Logger, cardService *services.CardService, columnHandler *column.Handler) *Handler {
 	return &Handler{
-		BaseHandler:   base.NewBaseHandler(log),
+		BaseHandler:   base.NewBaseHandler(log, "board"),
 		CardService:   cardService,
 		ColumnHandler: columnHandler,
 	}
@@ -29,7 +28,7 @@ func New(log *slog.Logger, cardService *services.CardService, columnHandler *col
 
 // ServeHTTP handles HTTP requests for the board component
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.BaseHandler.ServeHTTP(w, r, h.Get, h.Post)
+	h.BaseHandler.ServeHTTP(w, r, h.Get, nil, nil)
 }
 
 // Get renders the board component
@@ -56,17 +55,11 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	// Render using the base handler
 	c := Board(props)
-	h.RenderTemplate(ctx, w, c, "board")
-}
-
-// Post handles form submissions and actions
-func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
-	// Board-specific POST actions can be added here
-	http.Error(w, "No actions implemented", http.StatusNotImplemented)
+	h.RenderTemplate(ctx, w, c)
 }
 
 // RenderComponent provides a way for other components to render this one
-func (h *Handler) RenderComponent(ctx context.Context) templ.Component {
+func (h *Handler) RenderComponent() templ.Component {
 	columnsWithCards := h.CardService.GetColumns()
 
 	// Convert to column components

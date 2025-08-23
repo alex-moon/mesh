@@ -35,7 +35,7 @@ func Board(props BoardProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<mesh-board><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/board.css\"><div class=\"board-header\"><h2>Board</h2></div><div class=\"board\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<mesh-board><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/board.css\"><div class=\"board-header card\"><h2>Board</h2></div><div class=\"board\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

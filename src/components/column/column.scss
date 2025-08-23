@@ -1,20 +1,22 @@
+@use "../../scss/card" as *;
+
 .column {
+  width: 20vw;
   display: flex;
   flex-direction: column;
-  width: 30vw;
-
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
-  margin: 8px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   .column-header {
+    margin-bottom: 8px;
     h3 {
       margin: 0;
       color: #333;
       font-size: 1.2em;
     }
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 }

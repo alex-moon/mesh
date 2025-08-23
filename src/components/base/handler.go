@@ -8,26 +8,50 @@ import (
 	"github.com/a-h/templ"
 )
 
-// BaseHandler provides common functionality for all component handlers
 type BaseHandler struct {
-	Log *slog.Logger
+	Log  *slog.Logger
+	name string
 }
 
-// NewBaseHandler creates a new base handler
-func NewBaseHandler(log *slog.Logger) *BaseHandler {
+func NewBaseHandler(log *slog.Logger, name string) *BaseHandler {
 	return &BaseHandler{
-		Log: log,
+		Log:  log,
+		name: name,
 	}
 }
 
-// ServeHTTP provides common HTTP method routing
-func (h *BaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, getHandler func(w http.ResponseWriter, r *http.Request), postHandler func(w http.ResponseWriter, r *http.Request)) {
+func (h *BaseHandler) ServeHTTP(
+	w http.ResponseWriter,
+	r *http.Request,
+	getHandler func(
+		w http.ResponseWriter,
+		r *http.Request,
+	),
+	postHandler func(
+		w http.ResponseWriter,
+		r *http.Request,
+	),
+	patchHandler func(
+		w http.ResponseWriter,
+		r *http.Request,
+	),
+) {
 	switch r.Method {
 	case http.MethodGet:
-		getHandler(w, r)
+		if getHandler == nil {
+			getHandler(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	case http.MethodPost:
 		if postHandler != nil {
 			postHandler(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	case http.MethodPatch:
+		if patchHandler != nil {
+			patchHandler(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
@@ -36,10 +60,13 @@ func (h *BaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, getHandl
 	}
 }
 
-// RenderTemplate renders a templ component with error handling
-func (h *BaseHandler) RenderTemplate(ctx context.Context, w http.ResponseWriter, component templ.Component, componentName string) {
+func (h *BaseHandler) RenderTemplate(
+	ctx context.Context,
+	w http.ResponseWriter,
+	component templ.Component,
+) {
 	if err := component.Render(ctx, w); err != nil {
-		h.Log.Error("failed to render "+componentName+" component", slog.Any("error", err))
+		h.Log.Error("failed to render "+h.name+" component", slog.Any("error", err))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 }

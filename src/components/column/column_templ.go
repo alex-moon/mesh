@@ -37,7 +37,7 @@ func Column(props ColumnProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<mesh-column><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/column.css\"><div class=\"column\"><div class=\"column-header\"><h3>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<mesh-column><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/column.css\"><div class=\"column card\"><div class=\"column-header\"><h3>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

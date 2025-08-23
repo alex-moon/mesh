@@ -23,7 +23,7 @@ type Registry struct {
 // NewRegistry creates a new registry with all handlers properly initialized
 func NewRegistry(logger *slog.Logger) *Registry {
 	// Create service
-	cardService := services.NewCardService()
+	cardService := services.NewCardService(logger)
 
 	// Create handlers with proper dependencies
 	cardHandler := card.New(logger, cardService)

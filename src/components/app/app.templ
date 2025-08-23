@@ -14,11 +14,7 @@ templ App(props AppProps) {
             <base href="/"/>
             <link rel="stylesheet" href="/static/css/components/app.css"/>
             <div class="app">
-                if props.BoardComponent != nil {
-                    @props.BoardComponent
-                } else {
-                    <div class="placeholder">No board component available</div>
-                }
+                @props.BoardComponent
             </div>
         </template>
     </mesh-app>

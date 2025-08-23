@@ -20,14 +20,14 @@ type Handler struct {
 // New creates a new app handler with dependencies
 func New(log *slog.Logger, boardHandler *board.Handler) *Handler {
 	return &Handler{
-		BaseHandler:  base.NewBaseHandler(log),
+		BaseHandler:  base.NewBaseHandler(log, "app"),
 		BoardHandler: boardHandler,
 	}
 }
 
 // ServeHTTP handles HTTP requests for the app component
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.BaseHandler.ServeHTTP(w, r, h.Get, nil)
+	h.BaseHandler.ServeHTTP(w, r, h.Get, nil, nil)
 }
 
 // Get renders the full app component
@@ -35,7 +35,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get the board component
-	boardComponent := h.BoardHandler.RenderComponent(ctx)
+	boardComponent := h.BoardHandler.RenderComponent()
 
 	// Create props for the app template
 	props := AppProps{
@@ -45,12 +45,12 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	// Render using the base handler
 	c := App(props)
-	h.RenderTemplate(ctx, w, c, "app")
+	h.RenderTemplate(ctx, w, c)
 }
 
 // RenderComponent provides a way for other components to render this one
 func (h *Handler) RenderComponent(ctx context.Context) templ.Component {
-	boardComponent := h.BoardHandler.RenderComponent(ctx)
+	boardComponent := h.BoardHandler.RenderComponent()
 
 	props := AppProps{
 		BoardComponent: boardComponent,
