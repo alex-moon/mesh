@@ -18,15 +18,20 @@ type Handler struct {
 	*services.CardService
 }
 
-func New(log *slog.Logger, cardService *services.CardService) *Handler {
+func New(log *slog.Logger, eventService *services.EventService, cardService *services.CardService) *Handler {
 	return &Handler{
-		BaseHandler: base.NewBaseHandler(log, "card"),
+		BaseHandler: base.NewBaseHandler(log, "card", eventService),
 		CardService: cardService,
 	}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.BaseHandler.ServeHTTP(w, r, h.Get, h.Post, h.Patch)
+	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
+		http.MethodGet:   h.Get,
+		http.MethodPost:  h.Post,
+		http.MethodPatch: h.Patch,
+		http.MethodPut:   h.Put,
+	})
 }
 
 func (h *Handler) getCardFromRequest(r *http.Request) (*services.Card, error) {
@@ -168,6 +173,10 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 	var props = h.getProps(card)
 	props.IsHTMX = h.IsHTMXRequest(r)
 	h.RenderTemplate(r.Context(), w, Card(props))
+}
+
+func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
+	// @todo switch on "action" - we will have either promote or demote
 }
 
 func (h *Handler) RenderComponent(card *services.Card) templ.Component {

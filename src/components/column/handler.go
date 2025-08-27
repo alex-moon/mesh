@@ -19,17 +19,40 @@ type Handler struct {
 }
 
 // New creates a new column handler with dependencies
-func New(log *slog.Logger, cardService *services.CardService, cardHandler *card.Handler) *Handler {
-	return &Handler{
-		BaseHandler: base.NewBaseHandler(log, "column"),
+func New(
+	log *slog.Logger,
+	cardService *services.CardService,
+	eventService *services.EventService,
+	cardHandler *card.Handler,
+) *Handler {
+	h := &Handler{
+		BaseHandler: base.NewBaseHandler(log, "column", eventService),
 		CardHandler: cardHandler,
 		CardService: cardService,
+	}
+	eventService.SubscribeCardMoved(h.OnCardMoved)
+	return h
+}
+
+func (h *Handler) OnCardMoved(event *services.CardMovedEvent) {
+	h.Log.Info("Column handler card moved sub", "card", event.CardID, "from", event.FromColumnID, "to", event.ToColumnID)
+	column, err := h.CardService.GetColumn(event.FromColumnID)
+	if err != nil {
+		event.UpdateOob(h.RenderComponent(column))
+	}
+	column, err = h.CardService.GetColumn(event.ToColumnID)
+	if err != nil {
+		event.UpdateOob(h.RenderComponent(column))
 	}
 }
 
 // ServeHTTP handles HTTP requests for the column component
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.BaseHandler.ServeHTTP(w, r, h.Get, h.Post, h.Patch)
+	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
+		http.MethodGet:   h.Get,
+		http.MethodPost:  h.Post,
+		http.MethodPatch: h.Patch,
+	})
 }
 
 // Get renders the full column component

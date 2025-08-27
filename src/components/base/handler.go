@@ -3,59 +3,30 @@ package base
 import (
 	"context"
 	"log/slog"
+	"mesh/src/services"
 	"net/http"
 
 	"github.com/a-h/templ"
 )
 
 type BaseHandler struct {
-	Log  *slog.Logger
-	name string
+	Log          *slog.Logger
+	name         string
+	EventService *services.EventService
 }
 
-func NewBaseHandler(log *slog.Logger, name string) *BaseHandler {
+func NewBaseHandler(log *slog.Logger, name string, eventService *services.EventService) *BaseHandler {
 	return &BaseHandler{
-		Log:  log,
-		name: name,
+		Log:          log,
+		name:         name,
+		EventService: eventService,
 	}
 }
 
-func (h *BaseHandler) ServeHTTP(
-	w http.ResponseWriter,
-	r *http.Request,
-	getHandler func(
-		w http.ResponseWriter,
-		r *http.Request,
-	),
-	postHandler func(
-		w http.ResponseWriter,
-		r *http.Request,
-	),
-	patchHandler func(
-		w http.ResponseWriter,
-		r *http.Request,
-	),
-) {
-	switch r.Method {
-	case http.MethodGet:
-		if getHandler == nil {
-			getHandler(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	case http.MethodPost:
-		if postHandler != nil {
-			postHandler(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	case http.MethodPatch:
-		if patchHandler != nil {
-			patchHandler(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	default:
+func (h *BaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, f map[string]http.HandlerFunc) {
+	if handler, exists := f[r.Method]; exists && handler != nil {
+		handler(w, r)
+	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }

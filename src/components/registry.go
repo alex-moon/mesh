@@ -18,18 +18,20 @@ type Registry struct {
 	ColumnHandler *column.Handler
 	CardHandler   *card.Handler
 	CardService   *services.CardService
+	EventService  *services.EventService
 }
 
 // NewRegistry creates a new registry with all handlers properly initialized
 func NewRegistry(logger *slog.Logger) *Registry {
 	// Create service
 	cardService := services.NewCardService(logger)
+	eventService := services.NewEventService(logger)
 
 	// Create handlers with proper dependencies
-	cardHandler := card.New(logger, cardService)
-	columnHandler := column.New(logger, cardService, cardHandler)
-	boardHandler := board.New(logger, cardService, columnHandler)
-	appHandler := app.New(logger, boardHandler)
+	cardHandler := card.New(logger, eventService, cardService)
+	columnHandler := column.New(logger, cardService, eventService, cardHandler)
+	boardHandler := board.New(logger, eventService, cardService, columnHandler)
+	appHandler := app.New(logger, eventService, boardHandler)
 
 	return &Registry{
 		AppHandler:    appHandler,
@@ -37,5 +39,6 @@ func NewRegistry(logger *slog.Logger) *Registry {
 		ColumnHandler: columnHandler,
 		CardHandler:   cardHandler,
 		CardService:   cardService,
+		EventService:  eventService,
 	}
 }

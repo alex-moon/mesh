@@ -18,9 +18,9 @@ type Handler struct {
 }
 
 // New creates a new board handler with dependencies
-func New(log *slog.Logger, cardService *services.CardService, columnHandler *column.Handler) *Handler {
+func New(log *slog.Logger, eventService *services.EventService, cardService *services.CardService, columnHandler *column.Handler) *Handler {
 	return &Handler{
-		BaseHandler:   base.NewBaseHandler(log, "board"),
+		BaseHandler:   base.NewBaseHandler(log, "board", eventService),
 		CardService:   cardService,
 		ColumnHandler: columnHandler,
 	}
@@ -28,7 +28,9 @@ func New(log *slog.Logger, cardService *services.CardService, columnHandler *col
 
 // ServeHTTP handles HTTP requests for the board component
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.BaseHandler.ServeHTTP(w, r, h.Get, nil, nil)
+	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
+		http.MethodGet: h.Get,
+	})
 }
 
 // Get renders the board component

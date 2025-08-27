@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"mesh/src/components/board"
+	"mesh/src/services"
 	"net/http"
 
 	"mesh/src/components/base"
@@ -11,23 +12,27 @@ import (
 	"github.com/a-h/templ"
 )
 
-// Handler represents the app component's HTTP handler
 type Handler struct {
 	*base.BaseHandler
 	BoardHandler *board.Handler
 }
 
-// New creates a new app handler with dependencies
-func New(log *slog.Logger, boardHandler *board.Handler) *Handler {
+func New(
+	log *slog.Logger,
+	eventService *services.EventService,
+	boardHandler *board.Handler,
+) *Handler {
 	return &Handler{
-		BaseHandler:  base.NewBaseHandler(log, "app"),
+		BaseHandler:  base.NewBaseHandler(log, "app", eventService),
 		BoardHandler: boardHandler,
 	}
 }
 
 // ServeHTTP handles HTTP requests for the app component
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.BaseHandler.ServeHTTP(w, r, h.Get, nil, nil)
+	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
+		http.MethodGet: h.Get,
+	})
 }
 
 // Get renders the full app component
