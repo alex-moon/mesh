@@ -8,4 +8,8 @@ button {
   display: flex;
   align-items: flex-end;
   gap: 8px;
+
+  &.warn {
+    background-color: #ff4d4f;
+  }
 }
