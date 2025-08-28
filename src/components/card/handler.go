@@ -79,9 +79,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	props := h.getProps(card)
-	c := Card(props)
-	h.RenderTemplate(r.Context(), w, c)
+	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 }
 
 func (h *Handler) validate(r *http.Request) (Data, Errors) {
@@ -134,8 +132,8 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var props = h.getProps(card)
-	h.RenderTemplate(r.Context(), w, Card(props))
+	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
+	h.RenderTemplate(r.Context(), w, h.RenderComponentForNew(card.ColumnID))
 }
 
 func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
@@ -166,8 +164,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Log.Info("Rendering card")
-	var props = h.getProps(card)
-	h.RenderTemplate(r.Context(), w, Card(props))
+	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
@@ -202,6 +199,19 @@ func (h *Handler) RenderComponent(card *services.Card) templ.Component {
 	return Card(props)
 }
 
+func (h *Handler) RenderComponentForNew(columnID int) templ.Component {
+	props := h.getPropsForNew(columnID)
+	return Card(props)
+}
+
+func (h *Handler) getPropsForNew(columnID int) CardProps {
+	return h.getPropsWithData(
+		&services.Card{ColumnID: columnID},
+		Data{},
+		Errors{},
+	)
+}
+
 func (h *Handler) getProps(card *services.Card) CardProps {
 	return h.getPropsWithData(card, Data{
 		ID:      card.ID,
@@ -215,7 +225,7 @@ func (h *Handler) getPropsWithData(card *services.Card, data Data, errors Errors
 		Card:       card,
 		Data:       data,
 		Errors:     errors,
-		HasErrors:  errors.Any(),
+		IsEditing:  errors.Any(),
 		CanDemote:  h.CardService.CanDemote(card.ID),
 		CanPromote: h.CardService.CanPromote(card.ID),
 	}
