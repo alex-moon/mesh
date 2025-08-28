@@ -73,7 +73,6 @@ func (c *CardService) seedData() {
 func removeFromSlice(slice []int, element int) []int {
 	for i, v := range slice {
 		if v == element {
-			// This is the Go "splice" - remove element at index i
 			return append(slice[:i], slice[i+1:]...)
 		}
 	}
@@ -390,13 +389,7 @@ func (c *CardService) DeleteCard(cardID int) error {
 
 // Helper: remove card from column's card list
 func (c *CardService) removeCardFromColumn(cardID, columnID int) {
-	cardList := c.columnCards[columnID]
-	for i, id := range cardList {
-		if id == cardID {
-			c.columnCards[columnID] = append(cardList[:i], cardList[i+1:]...)
-			break
-		}
-	}
+	removeFromSlice(c.columnCards[columnID], cardID)
 }
 
 // Helper: insert card into column at specific position
