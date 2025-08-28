@@ -73,7 +73,6 @@ func (c *CardService) seedData() {
 func removeFromSlice(slice []int, element int) []int {
 	for i, v := range slice {
 		if v == element {
-			// This is the Go "splice" - remove element at index i
 			return append(slice[:i], slice[i+1:]...)
 		}
 	}
@@ -139,14 +138,7 @@ func (c *CardService) CanDemote(cardID int) bool {
 	return currentColumn.Order > 0
 }
 
-// Move card between columns (generic function)
-func (c *CardService) moveCard(
-	cardID int,
-	direction int,
-) (*Column, *Column, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
+func (c *CardService) Promote(cardID int) (*Column, *Column, error) {
 	card, exists := c.cards[cardID]
 	if !exists {
 		return nil, nil, fmt.Errorf("card with ID %d not found", cardID)
@@ -157,33 +149,31 @@ func (c *CardService) moveCard(
 		return nil, nil, fmt.Errorf("current column not found for card %d", cardID)
 	}
 
-	targetColumn := c.getColumnByOrder(currentColumn.Order + direction)
+	targetColumn := c.getColumnByOrder(currentColumn.Order + 1)
 	if targetColumn == nil {
-		if direction > 0 {
-			return nil, nil, fmt.Errorf("card %d cannot be promoted further", cardID)
-		} else {
-			return nil, nil, fmt.Errorf("card %d cannot be demoted further", cardID)
-		}
+		return nil, nil, fmt.Errorf("card %d cannot be promoted further", cardID)
 	}
 
-	// Remove card from current column
-	c.columnCards[currentColumn.ID] = removeFromSlice(c.columnCards[currentColumn.ID], cardID)
-
-	// Add card to target column
-	c.columnCards[targetColumn.ID] = append(c.columnCards[targetColumn.ID], cardID)
-
-	// Update card's column reference
-	card.ColumnID = targetColumn.ID
-
-	return currentColumn, targetColumn, nil
-}
-
-func (c *CardService) Promote(cardID int) (*Column, *Column, error) {
-	return c.moveCard(cardID, 1) // Move forward (+1)
+	return c.MoveCard(cardID, targetColumn.ID, -1)
 }
 
 func (c *CardService) Demote(cardID int) (*Column, *Column, error) {
-	return c.moveCard(cardID, -1) // Move backward (-1)
+	card, exists := c.cards[cardID]
+	if !exists {
+		return nil, nil, fmt.Errorf("card with ID %d not found", cardID)
+	}
+
+	currentColumn := c.columns[card.ColumnID]
+	if currentColumn == nil {
+		return nil, nil, fmt.Errorf("current column not found for card %d", cardID)
+	}
+
+	targetColumn := c.getColumnByOrder(currentColumn.Order - 1)
+	if targetColumn == nil {
+		return nil, nil, fmt.Errorf("card %d cannot be demoted further", cardID)
+	}
+
+	return c.MoveCard(cardID, targetColumn.ID, -1)
 }
 
 func (c *CardService) GetColumn(id int) (*ColumnWithCards, error) {
@@ -194,8 +184,6 @@ func (c *CardService) GetColumn(id int) (*ColumnWithCards, error) {
 	if !exists {
 		return nil, fmt.Errorf("column with id %d not found", id)
 	}
-
-	c.log.Info("Got column")
 
 	cards := c.getCardsForColumn(id)
 	return &ColumnWithCards{
@@ -297,17 +285,17 @@ func (c *CardService) UpdateCard(cardID int, title, content string) error {
 }
 
 // MoveCard moves a card to a different column and/or position
-func (c *CardService) MoveCard(cardID, newColumnID, newPosition int) error {
+func (c *CardService) MoveCard(cardID, newColumnID, newPosition int) (*Column, *Column, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	card, exists := c.cards[cardID]
 	if !exists {
-		return fmt.Errorf("card with ID %d not found", cardID)
+		return nil, nil, fmt.Errorf("card with ID %d not found", cardID)
 	}
 
 	if _, exists := c.columns[newColumnID]; !exists {
-		return fmt.Errorf("column with ID %d not found", newColumnID)
+		return nil, nil, fmt.Errorf("column with ID %d not found", newColumnID)
 	}
 
 	oldColumnID := card.ColumnID
@@ -321,7 +309,7 @@ func (c *CardService) MoveCard(cardID, newColumnID, newPosition int) error {
 	// Update card's column reference
 	card.ColumnID = newColumnID
 
-	return nil
+	return c.columns[oldColumnID], c.columns[newColumnID], nil
 }
 
 // ReorderCardInColumn moves a card to a different position within the same column
@@ -390,25 +378,20 @@ func (c *CardService) DeleteCard(cardID int) error {
 
 // Helper: remove card from column's card list
 func (c *CardService) removeCardFromColumn(cardID, columnID int) {
-	cardList := c.columnCards[columnID]
-	for i, id := range cardList {
-		if id == cardID {
-			c.columnCards[columnID] = append(cardList[:i], cardList[i+1:]...)
-			break
-		}
-	}
+	c.columnCards[columnID] = removeFromSlice(c.columnCards[columnID], cardID)
 }
 
 // Helper: insert card into column at specific position
 func (c *CardService) insertCardInColumn(cardID, columnID, position int) {
 	cardList := c.columnCards[columnID]
 
-	if position >= len(cardList) {
+	if position == -1 || position >= len(cardList) {
 		// Append to end
 		c.columnCards[columnID] = append(cardList, cardID)
 	} else {
 		// Insert at position
-		cardList = append(cardList[:position], append([]int{cardID}, cardList[position:]...)...)
+		tail := append([]int{cardID}, cardList[position:]...)
+		cardList = append(cardList[:position], tail...)
 		c.columnCards[columnID] = cardList
 	}
 }

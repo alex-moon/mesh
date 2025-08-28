@@ -27,10 +27,11 @@ func New(log *slog.Logger, eventService *services.EventService, cardService *ser
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
-		http.MethodGet:   h.Get,
-		http.MethodPost:  h.Post,
-		http.MethodPatch: h.Patch,
-		http.MethodPut:   h.Put,
+		http.MethodGet:    h.Get,
+		http.MethodPost:   h.Post,
+		http.MethodPatch:  h.Patch,
+		http.MethodPut:    h.Put,
+		http.MethodDelete: h.Delete,
 	})
 }
 
@@ -79,9 +80,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	props := h.getProps(card)
-	c := Card(props)
-	h.RenderTemplate(r.Context(), w, c)
+	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 }
 
 func (h *Handler) validate(r *http.Request) (Data, Errors) {
@@ -116,6 +115,20 @@ func (h *Handler) validate(r *http.Request) (Data, Errors) {
 	return data, errors
 }
 
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	card, err := h.getCardFromRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	err = h.CardService.DeleteCard(card.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 	var data, errors = h.validate(r)
 	if errors.Any() {
@@ -134,8 +147,8 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var props = h.getProps(card)
-	h.RenderTemplate(r.Context(), w, Card(props))
+	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
+	h.RenderTemplate(r.Context(), w, h.RenderComponentForNew(card.ColumnID))
 }
 
 func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
@@ -166,8 +179,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Log.Info("Rendering card")
-	var props = h.getProps(card)
-	h.RenderTemplate(r.Context(), w, Card(props))
+	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
@@ -182,24 +194,54 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		fromColumn, toColumn, err := h.CardService.Demote(card.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+			return
 		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
 		break
 	case PutActionPromote:
 		fromColumn, toColumn, err := h.CardService.Promote(card.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+			return
 		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
 		break
+	case PutActionMove:
+		columnID, err := strconv.Atoi(r.FormValue("columnID"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		position, err := strconv.Atoi(r.FormValue("position"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		fromColumn, toColumn, err := h.CardService.MoveCard(card.ID, columnID, position)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
 	}
 }
 
 func (h *Handler) RenderComponent(card *services.Card) templ.Component {
 	props := h.getProps(card)
 	return Card(props)
+}
+
+func (h *Handler) RenderComponentForNew(columnID int) templ.Component {
+	props := h.getPropsForNew(columnID)
+	return Card(props)
+}
+
+func (h *Handler) getPropsForNew(columnID int) CardProps {
+	return h.getPropsWithData(
+		&services.Card{ColumnID: columnID},
+		Data{},
+		Errors{},
+	)
 }
 
 func (h *Handler) getProps(card *services.Card) CardProps {
@@ -215,7 +257,7 @@ func (h *Handler) getPropsWithData(card *services.Card, data Data, errors Errors
 		Card:       card,
 		Data:       data,
 		Errors:     errors,
-		HasErrors:  errors.Any(),
+		IsEditing:  errors.Any(),
 		CanDemote:  h.CardService.CanDemote(card.ID),
 		CanPromote: h.CardService.CanPromote(card.ID),
 	}

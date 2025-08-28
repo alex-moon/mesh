@@ -1,9 +1,11 @@
 @use "../../scss/card" as *;
 
 .column {
-  width: 20vw;
+  width: 300px;
   display: flex;
   flex-direction: column;
+  max-height: 70vh; // @todo what?
+  overflow-y: auto;
 
   .column-header {
     margin-bottom: 8px;

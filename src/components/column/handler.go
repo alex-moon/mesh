@@ -72,6 +72,8 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		cardComponent := h.CardHandler.RenderComponent(&card)
 		cardComponents = append(cardComponents, cardComponent)
 	}
+	newCard := h.CardHandler.RenderComponentForNew(columnWithCards.Column.ID)
+	cardComponents = append(cardComponents, newCard)
 	props := ColumnProps{
 		Column: &columnWithCards.Column,
 		Cards:  cardComponents,
@@ -89,6 +91,8 @@ func (h *Handler) RenderComponent(column *services.ColumnWithCards, oob bool) te
 		columnComponent := h.CardHandler.RenderComponent(&card)
 		cardComponents = append(cardComponents, columnComponent)
 	}
+	newCard := h.CardHandler.RenderComponentForNew(column.Column.ID)
+	cardComponents = append(cardComponents, newCard)
 	props := ColumnProps{
 		Column: &column.Column,
 		Cards:  cardComponents,

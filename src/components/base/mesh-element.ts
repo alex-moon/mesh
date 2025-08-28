@@ -58,6 +58,13 @@ export class MeshElement extends HTMLElement {
         });
     }
 
+    one(selector: string, cb: (el: HTMLElement) => void) {
+        const el = this.shadowRoot!.querySelector(selector)
+        if (el) {
+            cb(el as HTMLElement);
+        }
+    }
+
     all(selector: string, cb: (el: HTMLElement) => void) {
         return this.shadowRoot!.querySelectorAll(selector).forEach(e => cb(e as HTMLElement));
     }
