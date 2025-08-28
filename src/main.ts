@@ -7,7 +7,6 @@ import './components/card/card';
 
 import type {HtmxBeforeSwapDetail} from "./types/htmx";
 
-// @todo this doesn't work for oobBeforeSwap
 function enforceComponentSwap(evt: CustomEvent<HtmxBeforeSwapDetail>) {
     const detail = evt.detail;
     let elt = detail.elt;

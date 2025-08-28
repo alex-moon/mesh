@@ -18,12 +18,27 @@ export class Card extends MeshElement {
         this.show('[data-view]');
     }
 
-    promote() {
-        console.log('promote');
+    connectedCallback() {
+        super.connectedCallback();
+        this.setupDragAndDrop();
     }
 
-    demote() {
-        console.log('demote');
+    setupDragAndDrop() {
+        this.draggable = true;
+
+        this.addEventListener('dragstart', this.handleDragStart.bind(this));
+        this.addEventListener('dragend', this.handleDragEnd.bind(this));
     }
+
+    handleDragStart(e: any) {
+        e.dataTransfer.setData('text/plain', this.id);
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    handleDragEnd() {
+        this.classList.remove('dragging');
+    }
+
 }
 window.customElements.define('mesh-card', Card);
