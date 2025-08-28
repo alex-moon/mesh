@@ -1,7 +1,9 @@
 package services
 
 import (
+	"context"
 	"log/slog"
+	"net/http"
 
 	"github.com/a-h/templ"
 )
@@ -14,60 +16,72 @@ type Event interface {
 	Key() string
 }
 
+type EventContext struct {
+	Context        context.Context
+	ResponseWriter http.ResponseWriter
+}
+
+func (e *EventContext) Write(component templ.Component) {
+	err := component.Render(e.Context, e.ResponseWriter)
+	if err != nil {
+		http.Error(e.ResponseWriter, "Failed to render OOB updates", http.StatusInternalServerError)
+	}
+}
+
 type CardMovedEvent struct {
 	CardID       int
 	FromColumnID int
 	ToColumnID   int
-	oob          []templ.Component
 }
 
 func (e *CardMovedEvent) Key() string {
 	return CardMovedEventKey
 }
 
-func (e *CardMovedEvent) UpdateOob(component templ.Component) []templ.Component {
-	e.oob = append(e.oob, component)
-	return e.oob
-}
-
-func (e *CardMovedEvent) GetOob() []templ.Component {
-	return e.oob
-}
-
 type EventService struct {
 	log         *slog.Logger
-	subscribers map[string][]func(event Event)
+	subscribers map[string][]func(event Event, context EventContext)
 }
 
-func (e *EventService) Publish(event Event) {
+func (e *EventService) Publish(event Event, w http.ResponseWriter, ctx context.Context) {
+	eventContext := EventContext{
+		Context:        ctx,
+		ResponseWriter: w,
+	}
 	for _, subscriber := range e.subscribers[event.Key()] {
-		subscriber(event)
+		subscriber(event, eventContext)
 	}
 }
 
-func (e *EventService) Subscribe(key string, subscriber func(event Event)) {
+func (e *EventService) Subscribe(key string, subscriber func(event Event, context EventContext)) {
 	e.subscribers[key] = append(e.subscribers[key], subscriber)
 }
 
 func NewEventService(log *slog.Logger) *EventService {
 	return &EventService{
 		log:         log,
-		subscribers: make(map[string][]func(event Event)),
+		subscribers: make(map[string][]func(event Event, context EventContext)),
 	}
 }
 
-func (e *EventService) PublishCardMoved(cardID int, fromColumnID int, toColumnID int) *CardMovedEvent {
+func (e *EventService) PublishCardMoved(
+	cardID int,
+	fromColumnID int,
+	toColumnID int,
+	w http.ResponseWriter,
+	ctx context.Context,
+) *CardMovedEvent {
 	event := &CardMovedEvent{
 		CardID:       cardID,
 		FromColumnID: fromColumnID,
 		ToColumnID:   toColumnID,
 	}
-	e.Publish(event)
+	e.Publish(event, w, ctx)
 	return event
 }
 
-func (e *EventService) SubscribeCardMoved(subscriber func(event *CardMovedEvent)) {
-	e.Subscribe(CardMovedEventKey, func(event Event) {
-		subscriber(event.(*CardMovedEvent))
+func (e *EventService) SubscribeCardMoved(subscriber func(event *CardMovedEvent, context EventContext)) {
+	e.Subscribe(CardMovedEventKey, func(event Event, context EventContext) {
+		subscriber(event.(*CardMovedEvent), context)
 	})
 }

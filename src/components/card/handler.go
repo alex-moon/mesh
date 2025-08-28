@@ -80,7 +80,6 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	props := h.getProps(card)
-	props.IsHTMX = h.IsHTMXRequest(r)
 	c := Card(props)
 	h.RenderTemplate(r.Context(), w, c)
 }
@@ -121,7 +120,6 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 	var data, errors = h.validate(r)
 	if errors.Any() {
 		var props = h.getPropsWithData(&services.Card{}, data, errors)
-		props.IsHTMX = h.IsHTMXRequest(r)
 		h.RenderTemplate(r.Context(), w, Card(props))
 		return
 	}
@@ -137,7 +135,6 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var props = h.getProps(card)
-	props.IsHTMX = h.IsHTMXRequest(r)
 	h.RenderTemplate(r.Context(), w, Card(props))
 }
 
@@ -153,7 +150,6 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Any() {
 		var props = h.getPropsWithData(card, data, errors)
-		props.IsHTMX = h.IsHTMXRequest(r)
 		h.RenderTemplate(r.Context(), w, Card(props))
 		return
 	}
@@ -171,12 +167,34 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 
 	h.Log.Info("Rendering card")
 	var props = h.getProps(card)
-	props.IsHTMX = h.IsHTMXRequest(r)
 	h.RenderTemplate(r.Context(), w, Card(props))
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
-	// @todo switch on "action" - we will have either promote or demote
+	card, err := h.getCardFromRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	action := r.FormValue("action")
+	switch action {
+	case PutActionDemote:
+		fromColumn, toColumn, err := h.CardService.Demote(card.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+		}
+		break
+	case PutActionPromote:
+		fromColumn, toColumn, err := h.CardService.Promote(card.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
+			h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+		}
+		break
+	}
 }
 
 func (h *Handler) RenderComponent(card *services.Card) templ.Component {

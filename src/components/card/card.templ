@@ -1,6 +1,12 @@
 package card
 
-import "mesh/src/services"
+import (
+    "mesh/src/services"
+    "fmt"
+)
+
+const PutActionDemote = "demote"
+const PutActionPromote = "promote"
 
 type Data struct {
     ID int
@@ -29,11 +35,16 @@ type CardProps struct {
 	HasErrors  bool
 	CanDemote  bool
 	CanPromote bool
-	IsHTMX     bool
+	OOB        bool
 }
 
 templ Card(props CardProps) {
-    <mesh-card>
+    <mesh-card
+        id={ fmt.Sprintf("card-%d", props.Card.ID) }
+        if ( props.OOB ) {
+            hx-swap-oob="true"
+        }
+    >
         <template shadowrootmode="open">
             <base href="/"/>
             <link rel="stylesheet" href="/static/css/components/card.css"/>
@@ -46,15 +57,23 @@ templ Card(props CardProps) {
                 </div>
                 <div class="actions">
                     if props.CanDemote {
-                        <button mesh-click="demote">
-                            <i data-lucide="arrow-left"></i>
-                        </button>
+                        <form hx-put="/card">
+                            <input type="hidden" name="action" value="demote" />
+                            <input type="hidden" name="cardID" value={props.Card.ID} />
+                            <button type="submit" aria-label="Move to previous column">
+                                <i data-lucide="arrow-left"></i>
+                            </button>
+                        </form>
                     }
                     <button type="button" mesh-click="edit">Edit</button>
                     if props.CanPromote {
-                        <button mesh-click="promote">
-                            <i data-lucide="arrow-right"></i>
-                        </button>
+                        <form hx-put="/card">
+                            <input type="hidden" name="action" value="promote" />
+                            <input type="hidden" name="cardID" value={props.Card.ID} />
+                            <button type="submit" aria-label="Move to next column">
+                                <i data-lucide="arrow-right"></i>
+                            </button>
+                        </form>
                     }
                 </div>
             </div>

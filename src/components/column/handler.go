@@ -34,24 +34,25 @@ func New(
 	return h
 }
 
-func (h *Handler) OnCardMoved(event *services.CardMovedEvent) {
-	h.Log.Info("Column handler card moved sub", "card", event.CardID, "from", event.FromColumnID, "to", event.ToColumnID)
-	column, err := h.CardService.GetColumn(event.FromColumnID)
-	if err != nil {
-		event.UpdateOob(h.RenderComponent(column))
+func (h *Handler) OnCardMoved(event *services.CardMovedEvent, context services.EventContext) {
+	column, err := h.CardService.GetColumn(event.ToColumnID)
+	if err == nil {
+		context.Write(h.RenderComponent(column, true))
+	} else {
+		http.Error(context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 	}
-	column, err = h.CardService.GetColumn(event.ToColumnID)
-	if err != nil {
-		event.UpdateOob(h.RenderComponent(column))
+	column, err = h.CardService.GetColumn(event.FromColumnID)
+	if err == nil {
+		context.Write(h.RenderComponent(column, true))
+	} else {
+		http.Error(context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 // ServeHTTP handles HTTP requests for the column component
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
-		http.MethodGet:   h.Get,
-		http.MethodPost:  h.Post,
-		http.MethodPatch: h.Patch,
+		http.MethodGet: h.Get,
 	})
 }
 
@@ -72,9 +73,8 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		cardComponents = append(cardComponents, cardComponent)
 	}
 	props := ColumnProps{
-		Title:  columnWithCards.Column.Title,
+		Column: &columnWithCards.Column,
 		Cards:  cardComponents,
-		IsHTMX: h.IsHTMXRequest(r),
 	}
 
 	// Render using the base handler
@@ -82,19 +82,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	h.RenderTemplate(ctx, w, c)
 }
 
-func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// do stuff here lol
-	h.Get(w, r)
-}
-
-func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-	// do stuff here lol
-	h.Get(w, r)
-}
-
-func (h *Handler) RenderComponent(column *services.ColumnWithCards) templ.Component {
+func (h *Handler) RenderComponent(column *services.ColumnWithCards, oob bool) templ.Component {
 	// Convert to card components
 	var cardComponents []templ.Component
 	for _, card := range column.Cards {
@@ -102,9 +90,9 @@ func (h *Handler) RenderComponent(column *services.ColumnWithCards) templ.Compon
 		cardComponents = append(cardComponents, columnComponent)
 	}
 	props := ColumnProps{
-		Title:  column.Column.Title,
+		Column: &column.Column,
 		Cards:  cardComponents,
-		IsHTMX: false,
+		OOB:    oob,
 	}
 
 	return Column(props)

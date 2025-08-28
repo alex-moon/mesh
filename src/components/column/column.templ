@@ -1,21 +1,31 @@
 package column
 
+import (
+    "mesh/src/services"
+    "fmt"
+)
+
 // ColumnProps contains the data needed for the column template
 type ColumnProps struct {
-    Title string
+    *services.Column
     Cards []templ.Component
-    IsHTMX bool
+    OOB bool
 }
 
 // Column renders the column component
 templ Column(props ColumnProps) {
-    <mesh-column>
+    <mesh-column
+        id={ fmt.Sprintf("column-%d", props.Column.ID) }
+        if ( props.OOB ) {
+            hx-swap-oob="true"
+        }
+    >
         <template shadowrootmode="open">
             <base href="/"/>
             <link rel="stylesheet" href="/static/css/components/column.css"/>
             <div class="column card">
                 <div class="column-header">
-                    <h3>{ props.Title }</h3>
+                    <h3>{ props.Column.Title }</h3>
                 </div>
                 <div class="cards">
                     for _, card := range props.Cards {

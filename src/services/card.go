@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"log/slog"
+	"sort"
 	"sync"
 )
 
@@ -30,10 +31,11 @@ type CardService struct {
 	nextCardID   int
 	nextColumnID int
 
-	log *slog.Logger
+	log          *slog.Logger
+	eventService *EventService
 }
 
-func NewCardService(log *slog.Logger) *CardService {
+func NewCardService(log *slog.Logger, eventService *EventService) *CardService {
 	service := &CardService{
 		mu:           sync.RWMutex{},
 		cards:        make(map[int]*Card),
@@ -42,6 +44,7 @@ func NewCardService(log *slog.Logger) *CardService {
 		nextCardID:   4, // Starting after our seed data
 		nextColumnID: 4,
 		log:          log,
+		eventService: eventService,
 	}
 
 	// Seed data
@@ -66,26 +69,121 @@ func (c *CardService) seedData() {
 	c.columnCards[3] = []int{}
 }
 
-func (c *CardService) CanPromote(cardID int) bool {
-	for _, column := range c.columns {
-		for _, id := range c.columnCards[column.ID] {
-			if id == cardID {
-				return column.Order < len(c.columns)
-			}
+// Helper function to remove an element from a slice
+func removeFromSlice(slice []int, element int) []int {
+	for i, v := range slice {
+		if v == element {
+			// This is the Go "splice" - remove element at index i
+			return append(slice[:i], slice[i+1:]...)
 		}
 	}
-	return false
+	return slice
+}
+
+// Helper function to find column by order
+func (c *CardService) getColumnByOrder(order int) *Column {
+	for _, column := range c.columns {
+		if column.Order == order {
+			return column
+		}
+	}
+	return nil
+}
+
+// Get sorted list of columns by order
+func (c *CardService) getSortedColumns() []*Column {
+	columns := make([]*Column, 0, len(c.columns))
+	for _, column := range c.columns {
+		columns = append(columns, column)
+	}
+	sort.Slice(columns, func(i, j int) bool {
+		return columns[i].Order < columns[j].Order
+	})
+	return columns
+}
+
+func (c *CardService) CanPromote(cardID int) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	card, exists := c.cards[cardID]
+	if !exists {
+		return false
+	}
+
+	currentColumn := c.columns[card.ColumnID]
+	if currentColumn == nil {
+		return false
+	}
+
+	// Can't promote if already in the highest order column
+	nextColumn := c.getColumnByOrder(currentColumn.Order + 1)
+	return nextColumn != nil
 }
 
 func (c *CardService) CanDemote(cardID int) bool {
-	for _, column := range c.columns {
-		for _, id := range c.columnCards[column.ID] {
-			if id == cardID {
-				return column.Order > 0
-			}
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	card, exists := c.cards[cardID]
+	if !exists {
+		return false
+	}
+
+	currentColumn := c.columns[card.ColumnID]
+	if currentColumn == nil {
+		return false
+	}
+
+	// Can't demote if already in the lowest order column
+	return currentColumn.Order > 0
+}
+
+// Move card between columns (generic function)
+func (c *CardService) moveCard(
+	cardID int,
+	direction int,
+) (*Column, *Column, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	card, exists := c.cards[cardID]
+	if !exists {
+		return nil, nil, fmt.Errorf("card with ID %d not found", cardID)
+	}
+
+	currentColumn := c.columns[card.ColumnID]
+	if currentColumn == nil {
+		return nil, nil, fmt.Errorf("current column not found for card %d", cardID)
+	}
+
+	targetColumn := c.getColumnByOrder(currentColumn.Order + direction)
+	if targetColumn == nil {
+		if direction > 0 {
+			return nil, nil, fmt.Errorf("card %d cannot be promoted further", cardID)
+		} else {
+			return nil, nil, fmt.Errorf("card %d cannot be demoted further", cardID)
 		}
 	}
-	return false
+
+	// Remove card from current column
+	c.columnCards[currentColumn.ID] = removeFromSlice(c.columnCards[currentColumn.ID], cardID)
+
+	// Add card to target column
+	c.columnCards[targetColumn.ID] = append(c.columnCards[targetColumn.ID], cardID)
+
+	// Update card's column reference
+	card.ColumnID = targetColumn.ID
+
+	return currentColumn, targetColumn, nil
+}
+
+func (c *CardService) Promote(cardID int) (*Column, *Column, error) {
+	return c.moveCard(cardID, 1) // Move forward (+1)
+}
+
+func (c *CardService) Demote(cardID int) (*Column, *Column, error) {
+	return c.moveCard(cardID, -1) // Move backward (-1)
 }
 
 func (c *CardService) GetColumn(id int) (*ColumnWithCards, error) {
@@ -96,6 +194,8 @@ func (c *CardService) GetColumn(id int) (*ColumnWithCards, error) {
 	if !exists {
 		return nil, fmt.Errorf("column with id %d not found", id)
 	}
+
+	c.log.Info("Got column")
 
 	cards := c.getCardsForColumn(id)
 	return &ColumnWithCards{

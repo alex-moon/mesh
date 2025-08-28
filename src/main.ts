@@ -7,6 +7,7 @@ import './components/card/card';
 
 import type {HtmxBeforeSwapDetail} from "./types/htmx";
 
+// @todo this doesn't work for oobBeforeSwap
 function enforceComponentSwap(evt: CustomEvent<HtmxBeforeSwapDetail>) {
     const detail = evt.detail;
     let elt = detail.elt;
@@ -18,7 +19,32 @@ function enforceComponentSwap(evt: CustomEvent<HtmxBeforeSwapDetail>) {
     }
 }
 
-document.body.addEventListener("htmx:beforeSwap", enforceComponentSwap as EventListener);
-document.body.addEventListener("htmx:oobBeforeSwap", enforceComponentSwap as EventListener);
+function findInShadow(root: any, id: string): any {
+    const element = root.getElementById?.(id);
+    if (element) {
+        return element;
+    }
+    const allElements = root.querySelectorAll('*');
+    for (let element of allElements) {
+        if (element.shadowRoot) {
+            const found = findInShadow(element.shadowRoot, id);
+            if (found) {
+                return found;
+            }
+        }
+    }
+    return null;
+}
 
+function enableOobSwap(evt: CustomEvent<any>) {
+    const id = evt.detail.content.id;
+    const found = findInShadow(document, id);
+    if (found) {
+        found.outerHTML = evt.detail.content.outerHTML;
+        evt.preventDefault();
+    }
+}
+
+document.body.addEventListener("htmx:beforeSwap", enforceComponentSwap as EventListener);
+document.body.addEventListener("htmx:oobErrorNoTarget", enableOobSwap as EventListener);
 

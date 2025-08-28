@@ -45,7 +45,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	// Convert to column components
 	var columnComponents []templ.Component
 	for _, columnWithCards := range columnsWithCards {
-		columnComponent := h.ColumnHandler.RenderComponent(&columnWithCards)
+		columnComponent := h.ColumnHandler.RenderComponent(&columnWithCards, false)
 		columnComponents = append(columnComponents, columnComponent)
 	}
 
@@ -67,7 +67,7 @@ func (h *Handler) RenderComponent() templ.Component {
 	// Convert to column components
 	var columnComponents []templ.Component
 	for _, columnWithCards := range columnsWithCards {
-		columnComponent := h.ColumnHandler.RenderComponent(&columnWithCards)
+		columnComponent := h.ColumnHandler.RenderComponent(&columnWithCards, false)
 		columnComponents = append(columnComponents, columnComponent)
 	}
 
