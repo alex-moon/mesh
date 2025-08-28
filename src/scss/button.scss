@@ -1,6 +1,6 @@
 button {
-  background-color: #007bff;
-  color: white;
+  background-color: white;
+  color: black;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -11,5 +11,15 @@ button {
 
   &.warn {
     background-color: #ff4d4f;
+    color: white;
+  }
+
+  &.primary {
+    background-color: #007bff;
+    color: white;
+  }
+
+  &:hover {
+    box-shadow: 0 0 0 1px #ccc;
   }
 }
