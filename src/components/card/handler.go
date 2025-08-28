@@ -194,18 +194,35 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		fromColumn, toColumn, err := h.CardService.Demote(card.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+			return
 		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
 		break
 	case PutActionPromote:
 		fromColumn, toColumn, err := h.CardService.Promote(card.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+			return
 		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
 		break
+	case PutActionMove:
+		columnID, err := strconv.Atoi(r.FormValue("columnID"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		position, err := strconv.Atoi(r.FormValue("position"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		fromColumn, toColumn, err := h.CardService.MoveCard(card.ID, columnID, position)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
 	}
 }
 

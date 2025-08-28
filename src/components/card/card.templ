@@ -7,6 +7,7 @@ import (
 
 const PutActionDemote = "demote"
 const PutActionPromote = "promote"
+const PutActionMove = "move"
 
 type Data struct {
     ID int
@@ -42,6 +43,9 @@ templ Card(props CardProps) {
     <mesh-card
         if ( props.Card.ID != 0 ) {
             id={ fmt.Sprintf("card-%d", props.Card.ID) }
+            data-id={ props.Card.ID }
+        } else {
+            class="create"
         }
         if ( props.OOB ) {
             hx-swap-oob="true"
@@ -54,6 +58,9 @@ templ Card(props CardProps) {
                 <div data-view class={ "card", templ.KV("hide", props.IsEditing) }>
                     <div class="card-header">
                         <h3>{ props.Card.Title }</h3>
+                        <div class="grip">
+                            <i data-lucide="grip"></i>
+                        </div>
                     </div>
                     <div class="card-content">
                         { props.Card.Content }

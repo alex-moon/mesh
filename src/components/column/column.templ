@@ -16,6 +16,7 @@ type ColumnProps struct {
 templ Column(props ColumnProps) {
     <mesh-column
         id={ fmt.Sprintf("column-%d", props.Column.ID) }
+        data-id={ props.Column.ID }
         if ( props.OOB ) {
             hx-swap-oob="true"
         }
