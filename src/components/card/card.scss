@@ -4,12 +4,28 @@
 @use "../../scss/form" as *;
 
 .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
   
   h3 {
     margin: 0;
     color: #333;
     font-size: 1.2em;
+  }
+
+  .grip {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: grab;
+    border: 1px solid rgba(0, 0, 0, 0);
+    border-radius: 4px;
+
+    &:hover {
+      border: 1px solid #ccc;
+    }
   }
 }
 
