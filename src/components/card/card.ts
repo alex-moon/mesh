@@ -1,11 +1,13 @@
 import {MeshElement} from "../base/mesh-element.ts";
 
-import {ArrowLeft, ArrowRight} from 'lucide';
+import {ArrowLeft, ArrowRight, CircleX, Pencil} from 'lucide';
 
 export class Card extends MeshElement {
     protected icons = {
         ArrowLeft,
         ArrowRight,
+        CircleX,
+        Pencil,
     };
 
     edit() {

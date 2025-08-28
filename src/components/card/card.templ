@@ -68,7 +68,15 @@ templ Card(props CardProps) {
                                 </button>
                             </form>
                         }
-                        <button type="button" mesh-click="edit">Edit</button>
+                        <form hx-delete="/card">
+                            <input type="hidden" name="cardID" value={props.Card.ID} />
+                            <button type="submit" class="warn">
+                                <i data-lucide="circle-x"></i>
+                            </button>
+                        </form>
+                        <button type="button" mesh-click="edit">
+                            <i data-lucide="pencil"></i>
+                        </button>
                         if props.CanPromote {
                             <form hx-put="/card">
                                 <input type="hidden" name="action" value="promote" />

@@ -27,10 +27,11 @@ func New(log *slog.Logger, eventService *services.EventService, cardService *ser
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
-		http.MethodGet:   h.Get,
-		http.MethodPost:  h.Post,
-		http.MethodPatch: h.Patch,
-		http.MethodPut:   h.Put,
+		http.MethodGet:    h.Get,
+		http.MethodPost:   h.Post,
+		http.MethodPatch:  h.Patch,
+		http.MethodPut:    h.Put,
+		http.MethodDelete: h.Delete,
 	})
 }
 
@@ -112,6 +113,20 @@ func (h *Handler) validate(r *http.Request) (Data, Errors) {
 	}
 
 	return data, errors
+}
+
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	card, err := h.getCardFromRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	err = h.CardService.DeleteCard(card.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
