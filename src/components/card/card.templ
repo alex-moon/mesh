@@ -44,6 +44,8 @@ templ Card(props CardProps) {
         if ( props.Card.ID != 0 ) {
             id={ fmt.Sprintf("card-%d", props.Card.ID) }
             data-id={ props.Card.ID }
+        } else {
+            class="create"
         }
         if ( props.OOB ) {
             hx-swap-oob="true"

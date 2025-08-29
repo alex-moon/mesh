@@ -79,14 +79,7 @@ export class Column extends MeshElement {
 
         // Find where to insert the indicator
         const afterElement = this.getAfterElement(e);
-
-        if (afterElement) {
-            // Insert before this card
-            cardsContainer.insertBefore(this.dropIndicator, afterElement);
-        } else {
-            // Insert at the end
-            cardsContainer.appendChild(this.dropIndicator);
-        }
+        cardsContainer.insertBefore(this.dropIndicator, afterElement || cardsContainer.lastChild!);
     }
 
     removeDropIndicator() {
@@ -100,14 +93,14 @@ export class Column extends MeshElement {
         const afterElement = this.getAfterElement(e);
 
         if (!afterElement) {
-            return 0;
+            return -1;
         }
 
         return this.getCards().indexOf(afterElement);
     }
 
     private getCards() {
-        return Array.from(this.shadowRoot!.querySelectorAll('mesh-card'));
+        return Array.from(this.shadowRoot!.querySelectorAll('mesh-card:not(.create)'));
     }
 
     private getAfterElement(e: any) {
