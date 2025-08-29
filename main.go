@@ -24,6 +24,9 @@ func main() {
 	http.Handle("/board", registry.BoardHandler)
 	http.Handle("/column", registry.ColumnHandler)
 	http.Handle("/card", registry.CardHandler)
+	
+	// SSE endpoint for real-time updates
+	http.HandleFunc("/sse", registry.SSEService.ServeSSE)
 
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

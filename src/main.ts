@@ -47,3 +47,57 @@ function enableOobSwap(evt: CustomEvent<any>) {
 document.body.addEventListener("htmx:beforeSwap", enforceComponentSwap as EventListener);
 document.body.addEventListener("htmx:oobErrorNoTarget", enableOobSwap as EventListener);
 
+// SSE client for real-time collaboration
+function initializeSSE() {
+    const eventSource = new EventSource('/sse');
+    
+    eventSource.onopen = function() {
+        console.log('SSE connection established for real-time collaboration');
+    };
+    
+    eventSource.onmessage = function(event) {
+        try {
+            // Check if it's a connection message
+            const data = JSON.parse(event.data);
+            if (data.type === 'connected') {
+                console.log('SSE client connected:', data.clientID);
+                return;
+            }
+        } catch (e) {
+            // Not JSON, likely HTML content - process as OOB update
+            const html = event.data;
+            
+            // Create temporary container to parse HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Find elements with hx-swap-oob attribute (OOB updates)
+            const oobElements = tempDiv.querySelectorAll('[hx-swap-oob]');
+            
+            oobElements.forEach((oobElement) => {
+                const id = oobElement.id;
+                if (id) {
+                    // Find target element in shadow DOM
+                    const target = findInShadow(document, id);
+                    if (target) {
+                        target.outerHTML = oobElement.outerHTML;
+                        console.log('Applied SSE OOB update to element:', id);
+                    }
+                }
+            });
+        }
+    };
+    
+    eventSource.onerror = function(error) {
+        console.error('SSE connection error:', error);
+    };
+    
+    eventSource.onclose = function() {
+        console.log('SSE connection closed, attempting to reconnect...');
+        setTimeout(initializeSSE, 5000); // Reconnect after 5 seconds
+    };
+}
+
+// Initialize SSE when page loads
+document.addEventListener('DOMContentLoaded', initializeSSE);
+
