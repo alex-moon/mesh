@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	CardMovedEventKey = "card-moved"
+	CardMovedEventKey   = "card-moved"
+	CardChangedEventKey = "card-changed"
+	CardDeletedEventKey = "card-deleted"
 )
 
 type Event interface {
@@ -26,6 +28,22 @@ func (e *EventContext) Write(component templ.Component) {
 	if err != nil {
 		http.Error(e.ResponseWriter, "Failed to render OOB updates", http.StatusInternalServerError)
 	}
+}
+
+type CardDeletedEvent struct {
+	ColumnID int
+}
+
+func (e *CardDeletedEvent) Key() string {
+	return CardDeletedEventKey
+}
+
+type CardChangedEvent struct {
+	CardID int
+}
+
+func (e *CardChangedEvent) Key() string {
+	return CardChangedEventKey
 }
 
 type CardMovedEvent struct {
@@ -83,5 +101,41 @@ func (e *EventService) PublishCardMoved(
 func (e *EventService) SubscribeCardMoved(subscriber func(event *CardMovedEvent, context EventContext)) {
 	e.Subscribe(CardMovedEventKey, func(event Event, context EventContext) {
 		subscriber(event.(*CardMovedEvent), context)
+	})
+}
+
+func (e *EventService) PublishCardChanged(
+	cardID int,
+	w http.ResponseWriter,
+	ctx context.Context,
+) *CardChangedEvent {
+	event := &CardChangedEvent{
+		CardID: cardID,
+	}
+	e.Publish(event, w, ctx)
+	return event
+}
+
+func (e *EventService) SubscribeCardChanged(subscriber func(event *CardChangedEvent, context EventContext)) {
+	e.Subscribe(CardChangedEventKey, func(event Event, context EventContext) {
+		subscriber(event.(*CardChangedEvent), context)
+	})
+}
+
+func (e *EventService) PublishCardDeleted(
+	columnID int,
+	w http.ResponseWriter,
+	ctx context.Context,
+) *CardDeletedEvent {
+	event := &CardDeletedEvent{
+		ColumnID: columnID,
+	}
+	e.Publish(event, w, ctx)
+	return event
+}
+
+func (e *EventService) SubscribeCardDeleted(subscriber func(event *CardDeletedEvent, context EventContext)) {
+	e.Subscribe(CardDeletedEventKey, func(event Event, context EventContext) {
+		subscriber(event.(*CardDeletedEvent), context)
 	})
 }

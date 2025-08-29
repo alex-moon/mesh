@@ -15,6 +15,7 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
+    "htmx-ext-sse": "^2.2.3",
     "htmx.org": "^2.0.6",
     "lucide": "^0.541.0"
   }

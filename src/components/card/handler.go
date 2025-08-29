@@ -127,6 +127,8 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	h.EventService.PublishCardDeleted(card.ColumnID, w, r.Context())
 }
 
 func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
@@ -149,6 +151,8 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 
 	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 	h.RenderTemplate(r.Context(), w, h.RenderComponentForNew(card.ColumnID))
+
+	h.EventService.PublishCardChanged(card.ID, w, r.Context())
 }
 
 func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +162,6 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log.Info("Validating card")
 	var data, errors = h.validate(r)
 
 	if errors.Any() {
@@ -167,7 +170,6 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log.Info("Updating card")
 	err = h.CardService.UpdateCard(
 		card.ID,
 		data.Title,
@@ -178,8 +180,9 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log.Info("Rendering card")
 	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
+
+	h.EventService.PublishCardChanged(card.ID, w, r.Context())
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {

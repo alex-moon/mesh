@@ -16,6 +16,7 @@ type Handler struct {
 	*base.BaseHandler
 	CardHandler *card.Handler
 	*services.CardService
+	SSEService *services.SSEService
 }
 
 // New creates a new column handler with dependencies
@@ -24,28 +25,63 @@ func New(
 	cardService *services.CardService,
 	eventService *services.EventService,
 	cardHandler *card.Handler,
+	sseService *services.SSEService,
 ) *Handler {
 	h := &Handler{
 		BaseHandler: base.NewBaseHandler(log, "column", eventService),
 		CardHandler: cardHandler,
 		CardService: cardService,
+		SSEService:  sseService,
 	}
+	eventService.SubscribeCardChanged(h.OnCardChanged)
 	eventService.SubscribeCardMoved(h.OnCardMoved)
+	eventService.SubscribeCardDeleted(h.OnCardDeleted)
 	return h
 }
 
+func (h *Handler) OnCardDeleted(event *services.CardDeletedEvent, context services.EventContext) {
+	// Broadcast to column updates via SSE for real-time collaboration
+	column, err := h.CardService.GetColumn(event.ColumnID)
+	if err == nil {
+		component := h.RenderComponent(column, true)
+		h.SSEService.BroadcastOOBUpdate(component)
+	} else {
+		h.Log.Error("Failed to get to-column for SSE broadcast", "columnID", event.ColumnID, "error", err)
+	}
+}
+
+func (h *Handler) OnCardChanged(event *services.CardChangedEvent, context services.EventContext) {
+	card, err := h.CardService.GetCard(event.CardID)
+	if err != nil {
+		h.Log.Error("Failed to get card for card changed event", "cardID", event.CardID, "error", err)
+		return
+	}
+
+	// Broadcast to column updates via SSE for real-time collaboration
+	column, err := h.CardService.GetColumn(card.ColumnID)
+	if err == nil {
+		component := h.RenderComponent(column, true)
+		h.SSEService.BroadcastOOBUpdate(component)
+	} else {
+		h.Log.Error("Failed to get to-column for SSE broadcast", "columnID", card.ColumnID, "error", err)
+	}
+}
+
 func (h *Handler) OnCardMoved(event *services.CardMovedEvent, context services.EventContext) {
+	// Broadcast to column updates via SSE for real-time collaboration
 	column, err := h.CardService.GetColumn(event.ToColumnID)
 	if err == nil {
-		context.Write(h.RenderComponent(column, true))
+		component := h.RenderComponent(column, true)
+		h.SSEService.BroadcastOOBUpdate(component)
 	} else {
-		http.Error(context.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		h.Log.Error("Failed to get to-column for SSE broadcast", "columnID", event.ToColumnID, "error", err)
 	}
+
 	column, err = h.CardService.GetColumn(event.FromColumnID)
 	if err == nil {
-		context.Write(h.RenderComponent(column, true))
+		h.SSEService.BroadcastOOBUpdate(h.RenderComponent(column, true))
 	} else {
-		http.Error(context.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		h.Log.Error("Failed to get from-column for SSE broadcast", "columnID", event.FromColumnID, "error", err)
 	}
 }
 
