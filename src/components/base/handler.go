@@ -42,7 +42,7 @@ func (h *BaseHandler) RenderTemplate(
 	}
 }
 
-// IsHTMXRequest checks if the request is an HTMX request
-func (h *BaseHandler) IsHTMXRequest(r *http.Request) bool {
-	return r.Header.Get("HX-Request") == "true"
+// IsAJAXRequest checks if the request is an AJAX request
+func (h *BaseHandler) IsAJAXRequest(r *http.Request) bool {
+	return r.Header.Get("X-Requested-With") == "XMLHttpRequest"
 }

@@ -18,7 +18,7 @@ templ Column(props ColumnProps) {
         id={ fmt.Sprintf("column-%d", props.Column.ID) }
         data-id={ props.Column.ID }
         if ( props.OOB ) {
-            hx-swap-oob="true"
+            mesh-swap-oob="true"
         }
     >
         <template shadowrootmode="open">
