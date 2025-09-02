@@ -31,14 +31,30 @@ function handleOobSwap(evt: CustomEvent<any>) {
         const found = findInShadow(document, id);
 
         if (found) {
-            console.log('Found target in shadow DOM, replacing');
             found.outerHTML = content.outerHTML;
-
             evt.preventDefault();
-            return;
         }
+    }
+}
+
+// function handleSse(evt: CustomEvent<any>) {
+//     console.log('SSE message', evt.detail);
+//     evt.preventDefault();
+// }
+
+function enableOobSwap(evt: CustomEvent<any>) {
+    console.log('OOB swap', evt);
+    const id = evt.detail.content.id;
+    const found = findInShadow(document, id);
+    if (found) {
+        setTimeout(() => {
+            found.outerHTML = evt.detail.content.outerHTML;
+        });
+    } else {
+        console.error('Target not found in shadow DOM', evt);
     }
 }
 
 document.body.addEventListener("htmx:beforeSwap", enforceComponentSwap as EventListener);
 document.body.addEventListener("htmx:sseBeforeMessage", handleOobSwap as EventListener);
+document.body.addEventListener("htmx:oobErrorNoTarget", enableOobSwap as EventListener);

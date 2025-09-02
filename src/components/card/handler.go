@@ -162,7 +162,6 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log.Info("Validating card")
 	var data, errors = h.validate(r)
 
 	if errors.Any() {
@@ -171,7 +170,6 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log.Info("Updating card")
 	err = h.CardService.UpdateCard(
 		card.ID,
 		data.Title,
@@ -182,7 +180,6 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log.Info("Rendering card")
 	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 
 	h.EventService.PublishCardChanged(card.ID, w, r.Context())

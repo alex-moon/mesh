@@ -90,7 +90,6 @@ func (s *SSEService) BroadcastOOBUpdate(component templ.Component) {
 	}
 
 	html := buf.String()
-	s.log.Info("Rendered OOB update", html)
 	data := fmt.Sprintf("event: oob-update\ndata: %s\n\n", html)
 
 	// Broadcast to all clients

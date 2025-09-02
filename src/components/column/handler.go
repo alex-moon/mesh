@@ -44,7 +44,6 @@ func (h *Handler) OnCardDeleted(event *services.CardDeletedEvent, context servic
 	column, err := h.CardService.GetColumn(event.ColumnID)
 	if err == nil {
 		component := h.RenderComponent(column, true)
-		h.Log.Info("Broadcasting column update", component)
 		h.SSEService.BroadcastOOBUpdate(component)
 	} else {
 		h.Log.Error("Failed to get to-column for SSE broadcast", "columnID", event.ColumnID, "error", err)
@@ -62,7 +61,6 @@ func (h *Handler) OnCardChanged(event *services.CardChangedEvent, context servic
 	column, err := h.CardService.GetColumn(card.ColumnID)
 	if err == nil {
 		component := h.RenderComponent(column, true)
-		h.Log.Info("Broadcasting column update", component)
 		h.SSEService.BroadcastOOBUpdate(component)
 	} else {
 		h.Log.Error("Failed to get to-column for SSE broadcast", "columnID", card.ColumnID, "error", err)
@@ -74,7 +72,6 @@ func (h *Handler) OnCardMoved(event *services.CardMovedEvent, context services.E
 	column, err := h.CardService.GetColumn(event.ToColumnID)
 	if err == nil {
 		component := h.RenderComponent(column, true)
-		h.Log.Info("Broadcasting column update", component)
 		h.SSEService.BroadcastOOBUpdate(component)
 	} else {
 		h.Log.Error("Failed to get to-column for SSE broadcast", "columnID", event.ToColumnID, "error", err)
