@@ -111,15 +111,12 @@ export class Column extends MeshElement {
     }
 
     async moveCard(cardId: number, columnId: number, position: number) {
-        window.htmx.ajax('put', '/card', {
-            swap: 'none',
-            values: {
-                action: 'move',
-                cardID: cardId,
-                columnID: columnId,
-                position: position,
-            }
-        } as any);
+        const formData = new FormData();
+        formData.append('action', 'move');
+        formData.append('cardID', cardId.toString());
+        formData.append('columnID', columnId.toString());
+        formData.append('position', position.toString());
+        this.makeRequest('PUT', '/card', formData);
     }
 }
 window.customElements.define('mesh-column', Column);

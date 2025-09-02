@@ -45,7 +45,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	// Create props for the app template
 	props := AppProps{
 		BoardComponent: boardComponent,
-		IsHTMX:         h.IsHTMXRequest(r),
+		IsHTMX:         h.IsAJAXRequest(r),
 	}
 
 	// Render using the base handler

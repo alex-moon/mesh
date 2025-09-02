@@ -110,7 +110,7 @@ func Card(props CardProps) templ.Component {
 			}
 		}
 		if props.OOB {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " hx-swap-oob=\"true\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " mesh-swap-oob=\"true\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -169,7 +169,7 @@ func Card(props CardProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if props.CanDemote {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<form hx-put=\"/card\"><input type=\"hidden\" name=\"action\" value=\"demote\"> <input type=\"hidden\" name=\"cardID\" value=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<form mesh-put=\"/card\"><input type=\"hidden\" name=\"action\" value=\"demote\"> <input type=\"hidden\" name=\"cardID\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -187,7 +187,7 @@ func Card(props CardProps) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<form hx-delete=\"/card\"><input type=\"hidden\" name=\"cardID\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<form mesh-delete=\"/card\"><input type=\"hidden\" name=\"cardID\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -205,7 +205,7 @@ func Card(props CardProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if props.CanPromote {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<form hx-put=\"/card\"><input type=\"hidden\" name=\"action\" value=\"promote\"> <input type=\"hidden\" name=\"cardID\" value=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<form mesh-put=\"/card\"><input type=\"hidden\" name=\"action\" value=\"promote\"> <input type=\"hidden\" name=\"cardID\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -275,12 +275,12 @@ func Card(props CardProps) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if props.Card.ID != 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, " hx-patch=\"/card\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, " mesh-patch=\"/card\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, " hx-post=\"/card\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, " mesh-post=\"/card\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
