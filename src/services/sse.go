@@ -9,15 +9,16 @@ import (
 	"sync"
 
 	"github.com/a-h/templ"
+	"github.com/google/uuid"
 )
 
 // SSEClient represents a connected client
 type SSEClient struct {
-	ID       string
-	Writer   http.ResponseWriter
-	Flusher  http.Flusher
-	Done     chan bool
-	Context  context.Context
+	ID      string
+	Writer  http.ResponseWriter
+	Flusher http.Flusher
+	Done    chan bool
+	Context context.Context
 }
 
 // SSEService manages Server-Sent Events connections and broadcasting
@@ -89,7 +90,8 @@ func (s *SSEService) BroadcastOOBUpdate(component templ.Component) {
 	}
 
 	html := buf.String()
-	data := fmt.Sprintf("data: %s\n\n", html)
+	s.log.Info("Rendered OOB update", html)
+	data := fmt.Sprintf("event: oob-update\ndata: %s\n\n", html)
 
 	// Broadcast to all clients
 	for clientID, client := range s.clients {
@@ -121,7 +123,7 @@ func (s *SSEService) ServeSSE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// Generate client ID (in real app, you might use session ID or user ID)
-	clientID := fmt.Sprintf("client_%d", len(s.clients))
+	clientID := uuid.New().String()
 
 	// Add client
 	client := s.AddClient(clientID, w, r.Context())
@@ -130,7 +132,6 @@ func (s *SSEService) ServeSSE(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send initial connection message
 	fmt.Fprintf(w, "data: {\"type\":\"connected\",\"clientID\":\"%s\"}\n\n", clientID)
 	client.Flusher.Flush()
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" hx-ext="shadow-host-swap">
+<html lang="en" hx-ext="shadow-host-swap,sse">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,12 +14,11 @@
 
     <link rel="icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="/static/{{.Css}}">
-    <script src="/static/htmx.js"></script>
     <script>
         // htmx.logAll()
     </script>
 </head>
-<body>
+<body hx-ext="sse" sse-connect="/sse" sse-swap="oob-update">
 <div class="container">
     <header>
         <div class="header">
