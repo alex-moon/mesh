@@ -48,7 +48,7 @@ templ Card(props CardProps) {
             class="create"
         }
         if ( props.OOB ) {
-            hx-swap-oob="true"
+            mesh-swap-oob="true"
         }
     >
         <template shadowrootmode="open">
@@ -67,7 +67,7 @@ templ Card(props CardProps) {
                     </div>
                     <div class="actions">
                         if props.CanDemote {
-                            <form hx-put="/card">
+                            <form mesh-put="/card">
                                 <input type="hidden" name="action" value="demote" />
                                 <input type="hidden" name="cardID" value={props.Card.ID} />
                                 <button type="submit" aria-label="Move to previous column">
@@ -75,7 +75,7 @@ templ Card(props CardProps) {
                                 </button>
                             </form>
                         }
-                        <form hx-delete="/card">
+                        <form mesh-delete="/card">
                             <input type="hidden" name="cardID" value={props.Card.ID} />
                             <button type="submit" class="warn">
                                 <i data-lucide="circle-x"></i>
@@ -85,7 +85,7 @@ templ Card(props CardProps) {
                             <i data-lucide="pencil"></i>
                         </button>
                         if props.CanPromote {
-                            <form hx-put="/card">
+                            <form mesh-put="/card">
                                 <input type="hidden" name="action" value="promote" />
                                 <input type="hidden" name="cardID" value={props.Card.ID} />
                                 <button type="submit" aria-label="Move to next column">
@@ -105,9 +105,9 @@ templ Card(props CardProps) {
                 data-form
                 class={ "card", templ.KV("hide", !props.IsEditing) }
                 if (props.Card.ID != 0) {
-                    hx-patch="/card"
+                    mesh-patch="/card"
                 } else {
-                    hx-post="/card"
+                    mesh-post="/card"
                 }
             >
                 if ( props.Card.ID != 0 ) {

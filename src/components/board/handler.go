@@ -37,7 +37,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	isHTMX := h.IsHTMXRequest(r)
+	isHTMX := h.IsAJAXRequest(r)
 
 	// Load all columns from service
 	columnsWithCards := h.CardService.GetColumns()

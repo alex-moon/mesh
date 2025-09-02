@@ -48,8 +48,6 @@ export class Card extends MeshElement {
     }
 
     createDragImage() {
-        console.log('piss');
-
         // Clone the card element
         const clone = this.cloneNode(true) as HTMLElement;
 
