@@ -59,7 +59,8 @@ WORKDIR /app
 
 # Copy binary and static assets from build stage
 COPY --from=build /app/main .
-COPY --from=build /app/public ./public
+COPY --from=build /app/index.html .
+COPY --from=build /app/static ./static
 
 # HTTPS certs for outbound requests
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
