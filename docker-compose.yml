@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  mesh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    image: mesh
+    volumes:
+      - static-files:/app/static
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "10084:80"
+    volumes:
+      - static-files:/app/static
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mesh
+
+volumes:
+  static-files:
+

@@ -3,3 +3,6 @@ run:
 
 build:
 	docker-compose -f docker-compose.local.yml build
+
+deploy:
+	./deploy.sh
