@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile
       target: prod
     image: mesh
-    volumes:
-      - static-files:/app/static
+    ports:
+      - "10084:8000"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -19,17 +19,3 @@ services:
           memory: 512M
         reservations:
           memory: 256M
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "10084:80"
-    volumes:
-      - static-files:/app/static
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - mesh
-
-volumes:
-  static-files:
-

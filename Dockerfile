@@ -22,16 +22,18 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Install air & templ for dev
-RUN go install github.com/air-verse/air@v1.61.7 \
-    && go install github.com/a-h/templ/cmd/templ@v0.3.898
-
 # ============
 # Dev stage
 # ============
 FROM base AS dev
 WORKDIR /app
+
 COPY . .
+
+# Install air & templ for dev
+RUN go install github.com/air-verse/air@v1.61.7 \
+    && go install github.com/a-h/templ/cmd/templ@v0.3.898
+
 EXPOSE 8000
 
 # Use air in dev for live reload

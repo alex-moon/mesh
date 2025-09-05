@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"log/slog"
 	"mesh/src/components/board"
 	"mesh/src/services"
@@ -28,39 +27,20 @@ func New(
 	}
 }
 
-// ServeHTTP handles HTTP requests for the app component
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.BaseHandler.ServeHTTP(w, r, map[string]http.HandlerFunc{
 		http.MethodGet: h.Get,
 	})
 }
 
-// Get renders the full app component
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	// Get the board component
-	boardComponent := h.BoardHandler.RenderComponent()
-
-	// Create props for the app template
-	props := AppProps{
-		BoardComponent: boardComponent,
-		IsHTMX:         h.IsAJAXRequest(r),
-	}
-
-	// Render using the base handler
-	c := App(props)
-	h.RenderTemplate(ctx, w, c)
+	h.RenderTemplate(r.Context(), w, h.RenderComponent())
 }
 
-// RenderComponent provides a way for other components to render this one
-func (h *Handler) RenderComponent(ctx context.Context) templ.Component {
+func (h *Handler) RenderComponent() templ.Component {
 	boardComponent := h.BoardHandler.RenderComponent()
-
 	props := AppProps{
 		BoardComponent: boardComponent,
-		IsHTMX:         false,
 	}
-
 	return App(props)
 }

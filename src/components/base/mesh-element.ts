@@ -30,12 +30,12 @@ export class MeshElement extends HTMLElement {
     }
 
     protected bindListeners() {
-        const supportedEvents = [
+        const supported = [
             'click', 'change', 'input', 'submit', 'focus', 'blur',
             'mouseenter', 'mouseleave', 'keydown', 'keyup', 'keypress',
         ];
 
-        supportedEvents.forEach(eventName => {
+        supported.forEach(eventName => {
             const attribute = "mesh-" + eventName;
             this.all('[' + attribute + ']', el => {
                 const methodName = el.getAttribute(attribute);
@@ -54,55 +54,38 @@ export class MeshElement extends HTMLElement {
     }
 
     protected bindFormHandlers() {
-        // Handle forms with mesh-* HTTP attributes
-        this.all('form[mesh-get], form[mesh-post], form[mesh-put], form[mesh-patch], form[mesh-delete]', form => {
-            form.addEventListener('submit', this.handleFormSubmit.bind(this));
+        const supported = [
+            'get', 'post', 'put', 'patch', 'delete',
+        ];
+
+        supported.forEach(verb => {
+            const attribute = "mesh-" + verb;
+            this.all('[' + attribute + ']', el => {
+                const form = el as HTMLFormElement;
+                form.addEventListener('submit', (event: Event) => {
+                    event.preventDefault();
+                    const method = verb.toUpperCase();
+                    const url = form.getAttribute(attribute);
+
+                    if (!url) {
+                        console.error('No URL specified for form submission');
+                        return;
+                    }
+
+                    const formData = new FormData(form);
+                    this.makeRequest(method, url, formData)
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('Form submission failed: ' + response.statusText);
+                            }
+                        })
+                        .then(html => this.outerHTML = html)
+                        .catch(error => console.error('Form submission failed:', error));
+                });
+            });
         });
-    }
-
-    protected async handleFormSubmit(event: Event) {
-        event.preventDefault();
-        const form = event.target as HTMLFormElement;
-        
-        // Determine HTTP method from mesh-* attributes
-        let method = 'GET';
-        let url = '';
-        
-        if (form.hasAttribute('mesh-get')) {
-            method = 'GET';
-            url = form.getAttribute('mesh-get') || '';
-        } else if (form.hasAttribute('mesh-post')) {
-            method = 'POST';
-            url = form.getAttribute('mesh-post') || '';
-        } else if (form.hasAttribute('mesh-put')) {
-            method = 'PUT';
-            url = form.getAttribute('mesh-put') || '';
-        } else if (form.hasAttribute('mesh-patch')) {
-            method = 'PATCH';
-            url = form.getAttribute('mesh-patch') || '';
-        } else if (form.hasAttribute('mesh-delete')) {
-            method = 'DELETE';
-            url = form.getAttribute('mesh-delete') || '';
-        }
-
-        if (!url) {
-            console.error('No URL specified for form submission');
-            return;
-        }
-
-        try {
-            const formData = new FormData(form);
-            const response = await this.makeRequest(method, url, formData);
-
-            if (response.ok) {
-                const html = await response.text();
-                this.handleResponse(html, form);
-            } else {
-                console.error('Form submission failed:', response.status, response.statusText);
-            }
-        } catch (error) {
-            console.error('Form submission error:', error);
-        }
     }
 
     protected async makeRequest(method: string, url: string, formData: FormData): Promise<Response> {
@@ -123,34 +106,8 @@ export class MeshElement extends HTMLElement {
         return fetch(url, options);
     }
 
-    protected handleResponse(html: string, form: HTMLFormElement) {
-        // Check for mesh-target attribute to determine where to place response
-        const target = form.getAttribute('mesh-target');
-        
-        if (target) {
-            const targetElement = this.shadowRoot?.querySelector(target) || document.querySelector(target);
-            if (targetElement) {
-                targetElement.innerHTML = html;
-                return;
-            }
-        }
-
-        // Check for mesh-swap attribute to determine swap behavior
-        const swapMode = form.getAttribute('mesh-swap') || 'outerHTML';
-        
-        switch (swapMode) {
-            case 'innerHTML':
-                this.innerHTML = html;
-                break;
-            case 'outerHTML':
-            default:
-                this.outerHTML = html;
-                break;
-        }
-    }
-
     one(selector: string, cb: (el: HTMLElement) => void) {
-        const el = this.shadowRoot!.querySelector(selector)
+        const el = this.shadowRoot!.querySelector(selector);
         if (el) {
             cb(el as HTMLElement);
         }

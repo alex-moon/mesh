@@ -13,7 +13,6 @@ import templruntime "github.com/a-h/templ/runtime"
 // AppProps contains the data needed for the app template
 type AppProps struct {
 	BoardComponent templ.Component
-	IsHTMX         bool
 }
 
 // App renders the main app component

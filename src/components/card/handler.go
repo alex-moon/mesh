@@ -128,7 +128,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.EventService.PublishCardDeleted(card.ColumnID, w, r.Context())
+	h.EventService.PublishCardDeleted(card.ColumnID)
 }
 
 func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 	h.RenderTemplate(r.Context(), w, h.RenderComponentForNew(card.ColumnID))
 
-	h.EventService.PublishCardChanged(card.ID, w, r.Context())
+	h.EventService.PublishCardChanged(card.ID)
 }
 
 func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +182,7 @@ func (h *Handler) Patch(w http.ResponseWriter, r *http.Request) {
 
 	h.RenderTemplate(r.Context(), w, h.RenderComponent(card))
 
-	h.EventService.PublishCardChanged(card.ID, w, r.Context())
+	h.EventService.PublishCardChanged(card.ID)
 }
 
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
@@ -199,7 +199,13 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+		updatedCard, err := h.CardService.GetCard(card.ID)
+		if err == nil {
+			props := h.getProps(updatedCard)
+			props.OOB = true
+			h.RenderTemplate(r.Context(), w, Card(props))
+		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID)
 		break
 	case PutActionPromote:
 		fromColumn, toColumn, err := h.CardService.Promote(card.ID)
@@ -207,7 +213,15 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+		// Get the updated card after the move
+		updatedCard, err := h.CardService.GetCard(card.ID)
+		if err == nil {
+			// Render the moved card with OOB to provide immediate visual feedback
+			props := h.getProps(updatedCard)
+			props.OOB = true
+			h.RenderTemplate(r.Context(), w, Card(props))
+		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID)
 		break
 	case PutActionMove:
 		columnID, err := strconv.Atoi(r.FormValue("columnID"))
@@ -225,7 +239,15 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID, w, r.Context())
+		// Get the updated card after the move
+		updatedCard, err := h.CardService.GetCard(card.ID)
+		if err == nil {
+			// Render the moved card with OOB to provide immediate visual feedback
+			props := h.getProps(updatedCard)
+			props.OOB = true
+			h.RenderTemplate(r.Context(), w, Card(props))
+		}
+		h.EventService.PublishCardMoved(card.ID, fromColumn.ID, toColumn.ID)
 	}
 }
 

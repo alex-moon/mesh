@@ -16,6 +16,9 @@ func main() {
 	// Create registry with all handlers
 	registry := components.NewRegistry(logger)
 
+	// Serve static files
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+
 	// Index page handler
 	http.HandleFunc("/", src.IndexHandler(registry))
 
