@@ -10,7 +10,6 @@ import templruntime "github.com/a-h/templ/runtime"
 
 type BoardProps struct {
 	Columns []templ.Component
-	IsHTMX  bool
 }
 
 // Board renders the board component

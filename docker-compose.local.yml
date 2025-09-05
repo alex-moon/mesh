@@ -20,7 +20,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./:/app:z
+      - ./nginx:/app/nginx:ro
       - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - mesh

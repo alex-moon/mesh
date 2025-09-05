@@ -41,8 +41,3 @@ func (h *BaseHandler) RenderTemplate(
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 }
-
-// IsAJAXRequest checks if the request is an AJAX request
-func (h *BaseHandler) IsAJAXRequest(r *http.Request) bool {
-	return r.Header.Get("X-Requested-With") == "XMLHttpRequest"
-}

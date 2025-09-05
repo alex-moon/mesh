@@ -2,86 +2,59 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
+	"github.com/r3labs/sse/v2"
 )
 
-// SSEClient represents a connected client
-type SSEClient struct {
-	ID      string
-	Writer  http.ResponseWriter
-	Flusher http.Flusher
-	Done    chan bool
-	Context context.Context
+type BatchedUpdate struct {
+	ID   string `json:"id"`
+	HTML string `json:"html"`
 }
 
-// SSEService manages Server-Sent Events connections and broadcasting
+type UpdateBatch struct {
+	BatchID string          `json:"batchId"`
+	Updates []BatchedUpdate `json:"updates"`
+}
+
 type SSEService struct {
-	log     *slog.Logger
-	clients map[string]*SSEClient
-	mutex   sync.RWMutex
+	log            *slog.Logger
+	server         *sse.Server
+	pendingUpdates []BatchedUpdate
+	batchMutex     sync.Mutex
+	batchTimer     *time.Timer
+	batchDuration  time.Duration
 }
 
-// NewSSEService creates a new SSE service
 func NewSSEService(log *slog.Logger) *SSEService {
+	server := sse.New()
+
+	server.AutoReplay = false
+	server.AutoStream = true
+
+	server.OnSubscribe = func(streamID string, sub *sse.Subscriber) {
+		log.Info("SSE client connected", "streamID", streamID)
+	}
+
+	server.OnUnsubscribe = func(streamID string, sub *sse.Subscriber) {
+		log.Info("SSE client disconnected", "streamID", streamID)
+	}
+
 	return &SSEService{
-		log:     log,
-		clients: make(map[string]*SSEClient),
+		log:           log,
+		server:        server,
+		batchDuration: 50 * time.Millisecond,
 	}
 }
 
-// AddClient adds a new SSE client connection
-func (s *SSEService) AddClient(clientID string, w http.ResponseWriter, ctx context.Context) *SSEClient {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		s.log.Error("Response writer does not support flushing")
-		return nil
-	}
-
-	client := &SSEClient{
-		ID:      clientID,
-		Writer:  w,
-		Flusher: flusher,
-		Done:    make(chan bool),
-		Context: ctx,
-	}
-
-	s.mutex.Lock()
-	s.clients[clientID] = client
-	s.mutex.Unlock()
-
-	s.log.Info("SSE client connected", "clientID", clientID, "total", len(s.clients))
-	return client
-}
-
-// RemoveClient removes an SSE client connection
-func (s *SSEService) RemoveClient(clientID string) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	if client, exists := s.clients[clientID]; exists {
-		close(client.Done)
-		delete(s.clients, clientID)
-		s.log.Info("SSE client disconnected", "clientID", clientID, "total", len(s.clients))
-	}
-}
-
-// BroadcastOOBUpdate sends an OOB update to all connected clients
 func (s *SSEService) BroadcastOOBUpdate(component templ.Component) {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-
-	if len(s.clients) == 0 {
-		return
-	}
-
-	// Render component to string
 	var buf strings.Builder
 	err := component.Render(context.Background(), &buf)
 	if err != nil {
@@ -90,55 +63,88 @@ func (s *SSEService) BroadcastOOBUpdate(component templ.Component) {
 	}
 
 	html := buf.String()
-	data := fmt.Sprintf("event: oob-update\ndata: %s\n\n", html)
 
-	// Broadcast to all clients
-	for clientID, client := range s.clients {
-		select {
-		case <-client.Done:
-			// Client is done, skip
-			continue
-		default:
-			_, err := client.Writer.Write([]byte(data))
-			if err != nil {
-				s.log.Error("Failed to write to SSE client", "clientID", clientID, "error", err)
-				// Remove client asynchronously to avoid blocking
-				go s.RemoveClient(clientID)
-				continue
-			}
-			client.Flusher.Flush()
+	var componentID = "?"
+	if idStart := strings.Index(html, "id=\""); idStart >= 0 {
+		idStart += 4 // Skip `id="`
+		if idEnd := strings.Index(html[idStart:], "\""); idEnd >= 0 {
+			componentID = html[idStart : idStart+idEnd]
 		}
 	}
-
-	s.log.Debug("Broadcasted OOB update to clients", "count", len(s.clients))
-}
-
-// ServeSSE handles SSE endpoint requests
-func (s *SSEService) ServeSSE(w http.ResponseWriter, r *http.Request) {
-	// Set SSE headers
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	// Generate client ID (in real app, you might use session ID or user ID)
-	clientID := uuid.New().String()
-
-	// Add client
-	client := s.AddClient(clientID, w, r.Context())
-	if client == nil {
-		http.Error(w, "Failed to create SSE connection", http.StatusInternalServerError)
+	if componentID == "?" {
+		s.log.Error("Failed to find component ID for OOB update")
 		return
 	}
 
-	fmt.Fprintf(w, "data: {\"type\":\"connected\",\"clientID\":\"%s\"}\n\n", clientID)
-	client.Flusher.Flush()
+	s.log.Info("Queueing OOB update for batch", "componentID", componentID)
 
-	// Wait for client disconnect or context cancellation
-	select {
-	case <-r.Context().Done():
-		s.RemoveClient(clientID)
-	case <-client.Done:
-		// Client was removed elsewhere
+	update := BatchedUpdate{
+		ID:   componentID,
+		HTML: html,
 	}
+
+	s.addToBatch(update)
+}
+
+func (s *SSEService) addToBatch(update BatchedUpdate) {
+	s.batchMutex.Lock()
+	defer s.batchMutex.Unlock()
+
+	found := false
+	for i, existing := range s.pendingUpdates {
+		if existing.ID == update.ID {
+			s.pendingUpdates[i] = update
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		s.pendingUpdates = append(s.pendingUpdates, update)
+	}
+
+	if s.batchTimer != nil {
+		s.batchTimer.Stop()
+	}
+
+	s.batchTimer = time.AfterFunc(s.batchDuration, func() {
+		s.flushBatch()
+	})
+}
+
+func (s *SSEService) flushBatch() {
+	s.batchMutex.Lock()
+	if len(s.pendingUpdates) == 0 {
+		s.batchMutex.Unlock()
+		return
+	}
+
+	updates := make([]BatchedUpdate, len(s.pendingUpdates))
+	copy(updates, s.pendingUpdates)
+	s.pendingUpdates = s.pendingUpdates[:0] // Clear the slice
+	s.batchMutex.Unlock()
+
+	batch := UpdateBatch{
+		BatchID: uuid.New().String(),
+		Updates: updates,
+	}
+
+	batchData, err := json.Marshal(batch)
+	if err != nil {
+		s.log.Error("Failed to serialize batch", "error", err)
+		return
+	}
+
+	s.log.Info("Broadcasting batch", "batchID", batch.BatchID, "updateCount", len(updates))
+
+	s.server.Publish("oob-updates", &sse.Event{
+		Event: []byte("oob-batch"),
+		Data:  batchData,
+	})
+
+	s.log.Debug("Broadcasted batch to all clients", "batchID", batch.BatchID, "count", len(updates))
+}
+
+func (s *SSEService) ServeSSE(w http.ResponseWriter, r *http.Request) {
+	s.server.ServeHTTP(w, r)
 }
