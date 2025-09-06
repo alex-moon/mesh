@@ -20,6 +20,7 @@ type Registry struct {
 	CardService   *services.CardService
 	EventService  *services.EventService
 	SSEService    *services.SSEService
+	WordService   *services.WordService
 }
 
 // NewRegistry creates a new registry with all handlers properly initialized
@@ -27,7 +28,13 @@ func NewRegistry(logger *slog.Logger) *Registry {
 	// Create services
 	eventService := services.NewEventService(logger)
 	sseService := services.NewSSEService(logger)
-	cardService := services.NewCardService(logger, eventService)
+	wordService, err := services.NewWordService(logger, "blacklist.txt")
+	if err != nil {
+		logger.Error("Failed to create WordService", "error", err)
+		// Continue without word service - it will just not filter words
+		wordService = nil
+	}
+	cardService := services.NewCardService(logger, eventService, wordService)
 
 	// Create handlers with proper dependencies
 	cardHandler := card.New(logger, eventService, cardService)
@@ -43,5 +50,6 @@ func NewRegistry(logger *slog.Logger) *Registry {
 		CardService:   cardService,
 		EventService:  eventService,
 		SSEService:    sseService,
+		WordService:   wordService,
 	}
 }
