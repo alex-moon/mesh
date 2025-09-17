@@ -61,6 +61,7 @@ WORKDIR /app
 
 # Copy binary and static assets from build stage
 COPY --from=build /app/main .
+COPY --from=build /app/blacklist.txt .
 COPY --from=build /app/index.html .
 COPY --from=build /app/static ./static
 

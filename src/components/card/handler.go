@@ -16,12 +16,19 @@ import (
 type Handler struct {
 	*base.BaseHandler
 	*services.CardService
+	*services.WordService
 }
 
-func New(log *slog.Logger, eventService *services.EventService, cardService *services.CardService) *Handler {
+func New(
+	log *slog.Logger,
+	eventService *services.EventService,
+	cardService *services.CardService,
+	wordService *services.WordService,
+) *Handler {
 	return &Handler{
 		BaseHandler: base.NewBaseHandler(log, "card", eventService),
 		CardService: cardService,
+		WordService: wordService,
 	}
 }
 
@@ -103,6 +110,13 @@ func (h *Handler) validate(r *http.Request) (Data, Errors) {
 		errors.Content = "Content must be less than 1000 characters"
 	}
 
+	if blacklistedWord := h.WordService.Filter(data.Title); blacklistedWord != "" {
+		errors.Title = "Let's keep it light shall we"
+	}
+	if blacklistedWord := h.WordService.Filter(data.Content); blacklistedWord != "" {
+		errors.Content = "Let's keep it light shall we"
+	}
+
 	if r.FormValue("columnID") != "" {
 		var column, err = h.getColumnFromRequest(r)
 		if err != nil {
@@ -145,7 +159,7 @@ func (h *Handler) Post(w http.ResponseWriter, r *http.Request) {
 		data.ColumnID,
 	)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
