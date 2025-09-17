@@ -36,4 +36,5 @@ static/*
 scratch/*
 tmp/*
 node_modules
+blacklist.txt
 

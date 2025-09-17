@@ -31,9 +31,10 @@ type CardService struct {
 
 	log          *slog.Logger
 	eventService *EventService
+	wordService  *WordService
 }
 
-func NewCardService(log *slog.Logger, eventService *EventService) *CardService {
+func NewCardService(log *slog.Logger, eventService *EventService, wordService *WordService) *CardService {
 	service := &CardService{
 		mu:           sync.RWMutex{},
 		cards:        make(map[int]*Card),
@@ -41,6 +42,7 @@ func NewCardService(log *slog.Logger, eventService *EventService) *CardService {
 		columnCards:  make(map[int][]int),
 		log:          log,
 		eventService: eventService,
+		wordService:  wordService,
 	}
 	service.seedData()
 	return service
@@ -242,6 +244,13 @@ func (c *CardService) AddCard(title, content string, columnID int) (*Card, error
 		return nil, fmt.Errorf("column with ID %d not found", columnID)
 	}
 
+	if blacklistedWord := c.wordService.Filter(title); blacklistedWord != "" {
+		return nil, fmt.Errorf("title contains prohibited word: %s", blacklistedWord)
+	}
+	if blacklistedWord := c.wordService.Filter(content); blacklistedWord != "" {
+		return nil, fmt.Errorf("content contains prohibited word: %s", blacklistedWord)
+	}
+
 	card := &Card{
 		ID:       c.nextCardID,
 		Title:    title,
@@ -263,6 +272,16 @@ func (c *CardService) UpdateCard(cardID int, title, content string) error {
 	card, exists := c.cards[cardID]
 	if !exists {
 		return fmt.Errorf("card with ID %d not found", cardID)
+	}
+
+	// Check for blacklisted words if WordService is available
+	if c.wordService != nil {
+		if blacklistedWord := c.wordService.Filter(title); blacklistedWord != "" {
+			return fmt.Errorf("title contains prohibited word: %s", blacklistedWord)
+		}
+		if blacklistedWord := c.wordService.Filter(content); blacklistedWord != "" {
+			return fmt.Errorf("content contains prohibited word: %s", blacklistedWord)
+		}
 	}
 
 	card.Title = title
