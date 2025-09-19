@@ -10,7 +10,7 @@ ssh -t ajmoon "
   cd /opt/$app
   git reset --hard HEAD
   git pull origin \$(git rev-parse --abbrev-ref HEAD)
-  docker compose build -q
+  docker compose build --progress plain
   docker stack deploy -c docker-compose.yml $app
   docker run --rm -i \
     -v /var/run/docker.sock:/var/run/docker.sock \
