@@ -3,7 +3,7 @@
 
 ![Screengrab of MESH in action](preview.png)
 
-**[Live demo](https://mesh.ajmoon.com)
+**[Live demo](https://mesh.ajmoon.com)**
 
 MESH is a fun project intending to demonstrate the kinds of concepts
 embodied by [HTMX](https://htmx.org/) - without using HTMX. Specifically,
