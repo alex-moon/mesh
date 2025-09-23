@@ -10,13 +10,15 @@ templ Board(props BoardProps) {
         <template shadowrootmode="open">
             <base href="/"/>
             <link rel="stylesheet" href="/static/css/components/board.css"/>
-            <div class="board-header card">
-                <h2>Board</h2>
-            </div>
             <div class="board">
-                for _, column := range props.Columns {
-                    @column
-                }
+                <div class="board-header card">
+                    <h2>Board</h2>
+                </div>
+                <div class="columns">
+                    for _, column := range props.Columns {
+                        @column
+                    }
+                </div>
             </div>
         </template>
     </mesh-board>

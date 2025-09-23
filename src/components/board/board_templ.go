@@ -34,7 +34,7 @@ func Board(props BoardProps) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<mesh-board><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/board.css\"><div class=\"board-header card\"><h2>Board</h2></div><div class=\"board\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<mesh-board><template shadowrootmode=\"open\"><base href=\"/\"><link rel=\"stylesheet\" href=\"/static/css/components/board.css\"><div class=\"board\"><div class=\"board-header card\"><h2>Board</h2></div><div class=\"columns\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -44,7 +44,7 @@ func Board(props BoardProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></template></mesh-board>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div></template></mesh-board>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

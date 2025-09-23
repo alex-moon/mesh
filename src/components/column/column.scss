@@ -1,4 +1,5 @@
 @use "../../scss/card" as *;
+@use "../../config" as *;
 
 .column {
   width: 300px;
@@ -7,12 +8,22 @@
   max-height: 70vh; // @todo what?
   overflow-y: auto;
 
+  @include respond-to(mobile) {
+    width: 280px;
+    min-width: 280px;
+    flex-shrink: 0;
+  }
+
   .column-header {
     margin-bottom: 8px;
     h3 {
       margin: 0;
       color: #333;
       font-size: 1.2em;
+
+      @include respond-to(mobile) {
+        font-size: 1.1em;
+      }
     }
   }
 
@@ -20,5 +31,9 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+
+    @include respond-to(mobile) {
+      gap: 8px;
+    }
   }
 }

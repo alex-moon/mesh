@@ -1,3 +1,5 @@
+@use "../config" as *;
+
 .card {
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -8,4 +10,8 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+
+  @include respond-to(mobile) {
+    padding: 8px;
+  }
 }
